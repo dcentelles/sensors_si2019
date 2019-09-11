@@ -3,7 +3,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <geometry_msgs/Pose.h>
-#include <mavlink_cpp/GCSv1.h>
+#include <mavlink_cpp/GCS.h>
 #include <ros/publisher.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
@@ -45,7 +45,7 @@ private:
   tf::StampedTransform nedMerov, nedMtarget, cameraMrov;
   tf::Transform rovMtarget;
   tf::Transform rovMned;
-  std::shared_ptr<GCSv1> control;
+  std::shared_ptr<GCS> control;
   dccomms::Timer timer;
 
   double vmax = 1000, vmin = -1000;
@@ -77,7 +77,7 @@ OperatorController::OperatorController(ros::NodeHandle &nh) : _nh(nh) {
   SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%T.%F] %v"));
   SetAsyncMode(true);
   uint16_t localPort = 14550;
-  control = std::shared_ptr<GCSv1>(new GCSv1(localPort));
+  control = std::shared_ptr<GCS>(new GCS(localPort));
   control->SetLogName("GCS");
   control->SetLogLevel(info);
 
