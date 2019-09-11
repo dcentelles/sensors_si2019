@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE UWSimScene SYSTEM "UWSimScene.dtd" >
+<!DOCTYPE UWSimScene SYSTEM "UWSimScene.dtd" > 
 
 <UWSimScene>
   <oceanState>
@@ -69,8 +69,8 @@
   -->
 
   <netTracingScript>
-    <className>HIL2NetSimTracing</className>
-    <libPath>libuwsim_netsim_scripts.so</libPath>
+    <className>HILNetSimTracing</className>
+    <libPath>libsensors_si2019_netsim_scripts.so</libPath>
     <logToFile>uwsimnet.log</logToFile>
   </netTracingScript>
 
