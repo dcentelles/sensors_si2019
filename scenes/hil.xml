@@ -1,0 +1,1182 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE UWSimScene SYSTEM "UWSimScene.dtd" >
+
+<UWSimScene>
+  <oceanState>
+    <windx> 0.04 </windx>
+    <windy> 0.04 </windy>
+    <windSpeed> 12 </windSpeed>
+    <depth> 1000 </depth>
+    <reflectionDamping> 0.35 </reflectionDamping>
+    <waveScale> 1e-7 </waveScale>
+    <isNotChoppy> 0 </isNotChoppy>
+    <choppyFactor> 2.5 </choppyFactor>
+    <crestFoamHeight> 2.2 </crestFoamHeight>
+    <oceanSurfaceHeight> 0 </oceanSurfaceHeight>
+    <fog>
+      <density> 0.1 </density>
+      <color>
+	<r>0</r>
+	<g>0.05</g>
+	<b>0.3</b>
+      </color>
+    </fog>
+    <color>
+      <r>0.0</r>
+      <g>0.05</g>
+      <b>0.3</b>
+    </color>
+    <attenuation>
+      <r>0.015</r>
+      <g>0.0075 </g>
+      <b> 0.005 </b>
+    </attenuation>
+  </oceanState>
+  <simParams>
+    <disableShaders> 0 </disableShaders>
+    <resw> 640 </resw>
+    <resh> 480 </resh>
+  </simParams>
+  <camera>
+    <freeMotion> 1 </freeMotion>
+    <fov> 60 </fov>
+    <aspectRatio> 1.33 </aspectRatio>
+    <near> 0.1 </near>
+    <far> 10000 </far>
+    <position>
+      <x>-1.008775</x>
+      <y>-0.432777 </y>
+      <z>-3.236887 </z>
+    </position> 
+    <lookAt>
+      <x>-0.417715</x>
+      <y>-0.308857 </y>
+      <z>-4.033940 </z>
+    </lookAt>
+
+  </camera>
+
+  <nedOrigin>
+   <lat>39.993117</lat>
+   <lon>-0.068812</lon>
+  </nedOrigin>
+
+  <!--
+  ###################################################################
+  #################### CUSTOM TRACING SCRIPT ########################
+  ###################################################################
+  -->
+
+  <netTracingScript>
+    <className>HIL2NetSimTracing</className>
+    <libPath>libuwsim_netsim_scripts.so</libPath>
+    <logToFile>uwsimnet.log</logToFile>
+  </netTracingScript>
+
+  <!--
+  ###################################################################
+  #################### CUSTOM COMMS CHANNELS ########################
+  ###################################################################
+  -->
+  <CustomCommsChannel>
+    <id>0</id>
+    <propTimeIncPerMeter>0.666</propTimeIncPerMeter>
+    <minPropTime>0</minPropTime>
+    <logLevel>info</logLevel>
+  </CustomCommsChannel>
+
+  <CustomCommsChannel>
+    <id>1</id>
+    <propTimeIncPerMeter>3.333333333e-06</propTimeIncPerMeter>
+    <minPropTime>0</minPropTime>
+    <logLevel>info</logLevel>
+  </CustomCommsChannel>
+
+  <vehicle>
+    <name>buoy</name>
+    <file>data/scenes/empty.urdf</file>
+    <position>
+      <x> 0.0 </x>
+      <y> 0.0 </y>
+      <z> -1.0 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_buoy</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>0</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_buoy</tfId>
+      <position>
+        <x>0</x>
+        <y>0</y>
+        <z>0</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>
+      <mesh>
+       <path>data/objects/s2cr.3ds</path>
+       <scaleFactor>
+         <x>0.0005</x>
+         <y>0.0005</y>
+         <z>0.0005</z>
+       </scaleFactor>
+      </mesh>
+      <!-- instrinsic delay in ms -->
+      <intrinsicDelay>1</intrinsicDelay>
+      <!-- range limits in meters -->
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0000</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+
+      <logLevel>warn</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+  <!-- leader 0 (hil) -->
+  <vehicle>
+    <name>hil</name>
+    <file>data/scenes/bluerov2_ghost.urdf</file>
+   <!-- <fdm>5503</fdm> -->
+    <position>
+      <x> 0 </x>
+      <y> 0 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+
+    <CustomCommsDevice>
+      <dccommsId>comms_hil</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>1</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_hil</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>-3.1415</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+   <!-- explorer 1 -->
+  <vehicle>
+    <name>explorer1</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> -1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer1</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>2</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer1</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+  <!-- explorer 2 -->
+  <vehicle>
+    <name>explorer2</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> -1.5 </x>
+      <y> -1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer2</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>3</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer2</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+   <!-- explorer 3 -->
+  <vehicle>
+    <name>explorer3</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> -1.5 </x>
+      <y> 0 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer3</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>4</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer3</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+
+
+
+<!-- TEAM 2 -->
+
+  <!-- leader 1 -->
+  <vehicle>
+    <name>leader1</name>
+    <file>data/scenes/bluerov2_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> -10 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+
+    <CustomCommsDevice>
+      <dccommsId>comms_leader1</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>5</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_leader1</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>-3.1415</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+   <!-- explorer 1 -->
+  <vehicle>
+    <name>explorer1_2</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> -1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer1_2</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>6</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer1_2</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+  <!-- explorer 2 -->
+  <vehicle>
+    <name>explorer2_2</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> -1.5 </x>
+      <y> -1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer2_2</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>7</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer2_2</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+   <!-- explorer 3 -->
+  <vehicle>
+    <name>explorer3_2</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> -1.5 </x>
+      <y> 0 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <CustomCommsDevice>
+      <dccommsId>comms_explorer3_2</dccommsId>
+      <txChannelId>0</txChannelId>
+      <rxChannelId>0</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>8</mac>
+      <macProtocol>
+        <name>aloha</name>
+      </macProtocol>
+      <bitrate>6900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_explorer3_2</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>3.14</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>VariableLengthPacketBuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+    </CustomCommsDevice>
+  </vehicle>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <object>
+    <name> floor </name>
+    <file> objects/tankFloor.osg  </file>
+    <position>
+      <x> 0.05</x>
+      <y> 0.36 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>0 </p>
+      <y>0 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.6 </y>
+      <z> 0.6</z>
+    </scaleFactor>
+  </object>
+
+  <object>
+    <name> aruco_marker_1 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00001.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_6 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00006.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_11 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00011.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_16 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00016.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_21 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00021.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!--- col 2 -->
+
+
+  <object>
+    <name> aruco_marker_2 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00002.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_7 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00007.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_12 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00012.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_17 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00017.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_22 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00022.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!-- col 3 -->
+
+
+  <object>
+    <name> aruco_marker_3 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00003.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_8 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00008.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_13 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00013.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_18 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00018.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_23 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00023.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+<!-- col 4 -->
+
+  <object>
+    <name> aruco_marker_4 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00004.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_9 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00009.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_14 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00014.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_19 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00019.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_24 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00024.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!-- col 5 -->
+
+  <object>
+    <name> aruco_marker_5 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00005.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_10 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00010.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_15 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00015.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_20 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00020.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_25 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00025.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+  <rosInterfaces>
+ 
+   <WorldToROSTF>
+      <rootName> world </rootName>
+      <enableObjects> 1 </enableObjects>
+      <rate>20</rate>
+    </WorldToROSTF>
+
+    <VirtualCameraToROSImage>
+	<cameraName>bluerov2_camera</cameraName>
+	<imageTopic> /bluerov2/camera </imageTopic>
+	<infoTopic> /bluerov2/camera_info </infoTopic>
+    </VirtualCameraToROSImage>
+
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer1/velocity </topic>
+      <vehicleName> explorer1 </vehicleName>
+    </ROSTwistToPAT>  
+    
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer2/velocity </topic>
+      <vehicleName> explorer2 </vehicleName>
+    </ROSTwistToPAT>  
+    
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer3/velocity </topic>
+      <vehicleName> explorer3 </vehicleName>
+    </ROSTwistToPAT>  
+
+    <ROSTwistToPAT>
+      <topic> /uwsim/leader1/velocity </topic>
+      <vehicleName> leader1 </vehicleName>
+    </ROSTwistToPAT>  
+
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer1_2/velocity </topic>
+      <vehicleName> explorer1_2 </vehicleName>
+    </ROSTwistToPAT>  
+    
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer2_2/velocity </topic>
+      <vehicleName> explorer2_2 </vehicleName>
+    </ROSTwistToPAT>  
+    
+    <ROSTwistToPAT>
+      <topic> /uwsim/explorer3_2/velocity </topic>
+      <vehicleName> explorer3_2 </vehicleName>
+    </ROSTwistToPAT>  
+
+    <CustomCommsDeviceROS>
+      <name>comms_hil</name>
+      <topic>hil/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>comms_buoy</name>
+      <topic>buoy/s100</topic>
+      <rate>1</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>comms_leader1</name>
+      <topic>/uwsim/leader1/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>comms_explorer1</name>
+      <topic> /uwsim/explorer1/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+    
+    <CustomCommsDeviceROS>
+      <name>comms_explorer2</name>
+      <topic> /uwsim/explorer2/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+    
+    <CustomCommsDeviceROS>
+      <name>comms_explorer3</name>
+      <topic> /uwsim/explorer3/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>comms_explorer1_2</name>
+      <topic> /uwsim/explorer1_2/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+    
+    <CustomCommsDeviceROS>
+      <name>comms_explorer2_2</name>
+      <topic> /uwsim/explorer2_2/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+    
+    <CustomCommsDeviceROS>
+      <name>comms_explorer3_2</name>
+      <topic> /uwsim/explorer3_2/comms</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+
+  </rosInterfaces>
+
+</UWSimScene>
+

@@ -1,0 +1,9 @@
+[submodule "modules/mavlink_cpp"]
+	path = modules/mavlink_cpp
+	url = https://github.com/dcentelles/mavlink_cpp.git
+[submodule "modules/dccomms_examples"]
+	path = modules/dccomms_examples
+	url = https://github.com/dcentelles/dccomms_examples.git
+[submodule "modules/umci"]
+	path = modules/umci
+	url = https://github.com/dcentelles/umci.git
