@@ -54,6 +54,8 @@
   <build_depend>mavros</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>uwsim</build_depend>
+  <build_depend>wireless_ardusub</build_depend>
+  <build_depend>sensor_msgs</build_depend>
 
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
@@ -69,8 +71,7 @@
   <run_depend>tf_conversions</run_depend>
   <run_depend>uwsim</run_depend>
   <run_depend>joy</run_depend>
-  
-  <build_depend>sensor_msgs</build_depend>
+  <run_depend>wireless_ardusub</run_depend>
   <run_depend>sensor_msgs</run_depend>
 
 

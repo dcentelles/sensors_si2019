@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf_conversions
   uwsim
+  wireless_ardusub
 )
 
 SET(MODULES_DIR "modules" )
@@ -150,6 +151,7 @@ catkin_package(
     sensor_msgs
     sensor_msgs
     tf_conversions
+    wireless_ardusub
     uwsim
 )
 

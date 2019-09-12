@@ -94,6 +94,21 @@
   </CustomCommsChannel>
 
   <vehicle>
+    <name>bluerov2_ghost</name>
+    <file>data/scenes/bluerov2_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <vehicle>
     <name>buoy</name>
     <file>data/scenes/empty.urdf</file>
     <position>
@@ -160,7 +175,7 @@
   <vehicle>
     <name>hil</name>
     <file>data/scenes/bluerov2_ghost.urdf</file>
-   <!-- <fdm>5503</fdm> -->
+    <fdm>5503</fdm>
     <position>
       <x> 0 </x>
       <y> 0 </y>
@@ -171,6 +186,22 @@
       <p>0</p>
       <y>0</y>
     </orientation>
+    <virtualCamera>
+      <name>bluerov2_camera</name>
+      <relativeTo>base_link</relativeTo>
+      <resw> 1280 </resw>
+      <resh> 720 </resh>
+      <position>
+        <x>0.28</x>
+        <y> 0.0 </y>
+        <z> 0.03 </z>
+      </position>
+      <orientation>
+        <r>-1.57</r>
+        <p>0</p>
+        <y>1.57 </y>
+      </orientation>
+    </virtualCamera>
 
     <CustomCommsDevice>
       <dccommsId>comms_hil</dccommsId>
@@ -1074,13 +1105,18 @@
 
 
   <rosInterfaces>
- 
+	
+   <ROSOdomToPAT>
+      <topic> /bluerov2_ghost/odom </topic>
+      <vehicleName> bluerov2_ghost </vehicleName>
+    </ROSOdomToPAT>
+
    <WorldToROSTF>
       <rootName> world </rootName>
       <enableObjects> 1 </enableObjects>
       <rate>20</rate>
     </WorldToROSTF>
-
+  
     <VirtualCameraToROSImage>
 	<cameraName>bluerov2_camera</cameraName>
 	<imageTopic> /bluerov2/camera </imageTopic>
