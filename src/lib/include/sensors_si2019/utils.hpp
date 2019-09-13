@@ -7,14 +7,14 @@ namespace utils {
 
 static constexpr double range_yaw = M_PI * 2;
 
-static int GetDiscreteYaw(double rad) {
+int GetDiscreteRot(double rad) {
   int degrees = std::round(rad * 180.0 / M_PI); // conversion to degrees
   if (degrees < 0)
     degrees += 360; // convert negative to positive angles
 
   return degrees;
 }
-static double GetContinuousYaw(int deg) { return deg / 180. * M_PI; }
-}
-}
+double GetContinuousRot(int deg) { return deg / 180. * M_PI; }
+} // namespace utils
+} // namespace sensors_si2019
 #endif // UTILS_HPP

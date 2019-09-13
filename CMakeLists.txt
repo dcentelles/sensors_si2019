@@ -112,20 +112,20 @@ add_definitions(-fPIC -std=c++14)
 include_directories(
   ${${PROJECT_NAME}_INCLUDE_DIRS}
 )
-SET(${PROJECT_NAME}_CPP_FILES
-    ${SRCPATH}lib/src/pid.cpp
-)
+#SET(${PROJECT_NAME}_CPP_FILES
+#    ${SRCPATH}lib/src/pid.cpp
+#)
 SET(${PROJECT_NAME}_netsim_scripts_CPP_FILES
     ${SRCPATH}lib/src/HILNetSimTracing.cpp
 )
 
-add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_CPP_FILES})
+#add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_CPP_FILES})
 add_library(${PROJECT_NAME}_netsim_scripts SHARED ${${PROJECT_NAME}_netsim_scripts_CPP_FILES})
 
-add_executable (hil_leader ${SRCPATH}main/hil_leader.cpp)
-target_link_libraries(hil_leader ${catkin_LIBRARIES} ${MAVLINK_CPP_GIT} ${PROJECT_NAME} ${UMCI_GIT})
+#add_executable (hil_leader ${SRCPATH}main/hil_leader.cpp)
+#target_link_libraries(hil_leader ${catkin_LIBRARIES} ${MAVLINK_CPP_GIT} ${PROJECT_NAME} ${UMCI_GIT})
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}_netsim_scripts
         LIBRARY DESTINATION "lib"
         RUNTIME DESTINATION "bin"
         )
@@ -135,7 +135,7 @@ install(DIRECTORY "${SRCPATH}lib/include/${PROJECT_NAME}" DESTINATION "include")
 
 catkin_package(
    LIBRARIES
-    ${PROJECT_NAME}
+    ${PROJECT_NAME}_netsim_scripts
     ${${UMCI_GIT}_LIBRARIES}
     ${${MAVLINK_CPP_GIT}_LIBRARIES}
    INCLUDE_DIRS

@@ -3,22 +3,15 @@
 #include <functional>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/JointState.h>
+#include <sensors_si2019/HILNetSimTracing.h>
+#include <sensors_si2019/utils.hpp>
 #include <tf/transform_listener.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include <sensors_si2019/HILNetSimTracing.h>
 
 namespace sensors_si2019 {
 
 using namespace dccomms_packets;
-
-int GetDiscreteRot(double rad) {
-  int degrees = std::round(rad * 180.0 / M_PI); // conversion to degrees
-  if (degrees < 0)
-    degrees += 360; // convert negative to positive angles
-
-  return degrees;
-}
-double GetContinuousRot(int deg) { return deg / 180. * M_PI; }
+using namespace utils;
 
 HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   e1_pub = node.advertise<geometry_msgs::TwistStamped>(
@@ -39,8 +32,8 @@ HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
 }
 
 void HILNetSimTracing::PacketTransmitting(std::string path,
-                                           ROSCommsDevicePtr dev,
-                                           ns3ConstPacketPtr pkt) {
+                                          ROSCommsDevicePtr dev,
+                                          ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   //  Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -49,29 +42,29 @@ void HILNetSimTracing::PacketTransmitting(std::string path,
 }
 
 void HILNetSimTracing::PacketDropsUpdated(std::string path, uint32_t oldValue,
-                                           uint32_t newValue) {
+                                          uint32_t newValue) {
   // Info("[{}] PKTDROPS {}", path, newValue);
 }
 
 void HILNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
-                                      uint32_t newValue) {
+                                     uint32_t newValue) {
   // Info("[{}] TXFIFO {}", path, newValue);
 }
 
 void HILNetSimTracing::MacPacketDropsUpdated(std::string path,
-                                              uint32_t oldValue,
-                                              uint32_t newValue) {
+                                             uint32_t oldValue,
+                                             uint32_t newValue) {
   // Info("[{}] MAC PKTDROPS {}", path, newValue);
 }
 
 void HILNetSimTracing::MacTxFifoUpdated(std::string path, uint32_t oldValue,
-                                         uint32_t newValue) {
+                                        uint32_t newValue) {
   // Info("[{}] MAC TXFIFO {}", path, newValue);
 }
 
 void HILNetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
-                                    ns3ConstPacketPtr pkt, bool propErr,
-                                    bool colErr) {
+                                   ns3ConstPacketPtr pkt, bool propErr,
+                                   bool colErr) {
 
   NetsimHeader header;
   pkt->PeekHeader(header);
@@ -95,7 +88,7 @@ void HILNetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
 }
 
 void HILNetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
-                                       ns3ConstPacketPtr pkt) {
+                                      ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
   //  Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
@@ -104,7 +97,7 @@ void HILNetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
 }
 
 void HILNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
-                              ns3ConstPacketPtr pkt) {
+                             ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
   //  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path,
@@ -113,7 +106,7 @@ void HILNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
 }
 
 void HILNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
-                              ns3ConstPacketPtr pkt) {
+                             ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
   //  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path,
@@ -122,7 +115,7 @@ void HILNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
 }
 
 void HILNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
-                                     const tf::Vector3 &pos) {
+                                    const tf::Vector3 &pos) {
 
   // Info("[{}] POS: {} {} {}", dev->GetMac(), pos.getX(), pos.getY(),
   // pos.getZ());
@@ -154,9 +147,8 @@ void HILNetSimTracing::Configure() {
   // execution:
   // https://www.nsnam.org/docs/manual/html/realtime.html
 
-  ns3::Config::Connect(
-      "/ROSDeviceList/*/PacketError",
-      ns3::MakeCallback(&HILNetSimTracing::PacketError, this));
+  ns3::Config::Connect("/ROSDeviceList/*/PacketError",
+                       ns3::MakeCallback(&HILNetSimTracing::PacketError, this));
 
   ns3::Config::Connect(
       "/ROSDeviceList/*/PacketReceived",
@@ -196,8 +188,8 @@ void HILNetSimTracing::Configure() {
 }
 
 void HILNetSimTracing::GetLinearVel(const double &diffx, const double &diffy,
-                                     const double &diffz, double &vx,
-                                     double &vy, double &vz) {
+                                    const double &diffz, double &vx, double &vy,
+                                    double &vz) {
   double kp = 0.1;
   double kp2 = 0.03;
   vx = diffx * kp;
@@ -225,9 +217,9 @@ double HILNetSimTracing::AngleToRadians(const double &angle) {
 }
 
 void HILNetSimTracing::GetExplorerLinearVel(const double &diffx,
-                                             const double &diffy,
-                                             const double &diffz, double &vx,
-                                             double &vy, double &vz) {
+                                            const double &diffy,
+                                            const double &diffz, double &vx,
+                                            double &vy, double &vz) {
   double kp = 0.4;
   vx = diffx * kp;
   vy = diffy * kp;
@@ -235,8 +227,8 @@ void HILNetSimTracing::GetExplorerLinearVel(const double &diffx,
 }
 
 void HILNetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
-                                       std::mutex &mutex,
-                                       const tf::Transform &wMeRef) {
+                                      std::mutex &mutex,
+                                      const tf::Transform &wMeRef) {
   auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
   auto pkt = pb->Create();
   auto pd = pkt->GetPayloadBuffer();
@@ -279,9 +271,9 @@ void HILNetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
 }
 
 void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
-                                       std::mutex &mutex,
-                                       tf::Transform &wMl_comms,
-                                       bool &received) {
+                                      std::mutex &mutex,
+                                      tf::Transform &wMl_comms,
+                                      bool &received) {
   auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
   auto pkt = pb->Create();
   auto pd = pkt->GetPayloadBuffer();
@@ -925,4 +917,4 @@ void HILNetSimTracing::DoRun() {
 }
 
 CLASS_LOADER_REGISTER_CLASS(HILNetSimTracing, NetSimTracing)
-} // namespace uwsim_netstim
+} // namespace sensors_si2019
