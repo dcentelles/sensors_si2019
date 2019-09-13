@@ -10,7 +10,8 @@
 
 namespace sensors_si2019 {
 
+#define SITL 1
 
-}
+} // namespace sensors_si2019
 
 #endif /* INCLUDE_SENSORS2019_CONSTANTS_H_ */

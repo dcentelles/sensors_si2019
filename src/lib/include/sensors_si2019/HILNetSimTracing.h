@@ -2,6 +2,7 @@
 #include <nav_msgs/Odometry.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
+#include <umci/DcMac.h>
 #include <underwater_sensor_msgs/LedLight.h>
 #include <uwsim/NetSim.h>
 
@@ -10,6 +11,7 @@ namespace sensors_si2019 {
 using namespace uwsim;
 using namespace dccomms_packets;
 using namespace dccomms;
+using namespace umci;
 
 class HILNetSimTracing : public NetSimTracing {
 public:
@@ -58,24 +60,65 @@ public:
   double GetExplorerAngularVel(const double &diff);
 
   double AngleToRadians(const double &angle);
+  CommsDeviceServicePtr ConfigureDcMacLayerOnExplorer(const int &addr);
+  CommsDeviceServicePtr ConfigureDcMacLayerOnLeader(const int &addr,
+                                                    const bool &rf);
+  CommsDeviceServicePtr ConfigureDcMacLayerOnBuoy(const int &addr = 0);
 
   dccomms::Ptr<VariableLengthPacketBuilder> pb;
-  dccomms::Ptr<CommsDeviceService> buoy, hil, leader1, e1, e2, e3, e1_2, e2_2,
-      e3_2;
+  dccomms::CommsDeviceServicePtr buoy, hil, hil_rf, hil_ac, leader1, leader1_rf,
+      leader1_ac, e1, e2, e3, e1_2, e2_2, e3_2;
 
-  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMl1_mutex, wMe0_2_mutex, wMe1_2_mutex,
-      wMe2_2_mutex, wMe3_2_mutex, wMhil_comms_mutex, wMl1_comms_mutex, wMtl1_comms_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3, e1_2Mte1_2, e2_2Mte2_2, e3_2Mte3_2, wMtl1_comms,
-      l1Mtl1;
+  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMl1_mutex, wMe0_2_mutex,
+      wMe1_2_mutex, wMe2_2_mutex, wMe3_2_mutex, wMhil_comms_mutex,
+      wMl1_comms_mutex, wMtl1_comms_mutex;
+  tf::Transform e1Mte1, e2Mte2, e3Mte3, e1_2Mte1_2, e2_2Mte2_2, e3_2Mte3_2,
+      wMtl1_comms, l1Mtl1;
   tf::StampedTransform hilMte1, hilMte2, hilMte3, l1Mte1_2, l1Mte2_2, l1Mte3_2,
       wMe1, wMe2, wMe3, wMl1, wMe1_2, wMe2_2, wMe3_2;
 
   tf::Transform wMhil_comms, wMl1_comms;
-  bool acoustic = true;
-  bool wMhil_comms_received = false, wMl1_comms_received = false, wMtl1_received = false;
-  void explorerTxWork(int src, CommsDeviceServicePtr &stream, std::mutex &mutex,
-                      const tf::Transform &wMeRef);
+  bool wMhil_comms_received = false, wMl1_comms_received = false,
+       wMtl1_received = false;
+  void explorerTxWork(int src, int dst, CommsDeviceServicePtr &stream,
+                      std::mutex &mutex, const tf::Transform &wMeRef);
   void explorerRxWork(int src, CommsDeviceServicePtr &stream, std::mutex &mutex,
                       tf::Transform &wMl_comms, bool &received);
+
+  int16_t buoy_addr, hil_ac_addr, e1_addr, e2_addr, e3_addr, e1_2_addr,
+      e2_2_addr, e3_2_addr, hil_rf_addr, leader1_ac_addr, leader1_rf_addr,
+      t0_dst, t1_dst;
+
+protected:
+  bool use_rf_channels;
+  bool use_umci_mac;
 };
-} // namespace uwsim_netstim
+
+class RF_HILNetSimTracing : public HILNetSimTracing {
+public:
+  RF_HILNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_rf_channels = true;
+    HILNetSimTracing::Configure();
+  }
+};
+
+class RF_UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
+public:
+  RF_UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_rf_channels = true;
+    use_umci_mac = true;
+    HILNetSimTracing::Configure();
+  }
+};
+
+class UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
+public:
+  UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = true;
+    HILNetSimTracing::Configure();
+  }
+};
+} // namespace sensors_si2019

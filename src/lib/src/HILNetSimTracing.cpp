@@ -3,15 +3,18 @@
 #include <functional>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/JointState.h>
+#include <sensors_si2019/Constants.h>
 #include <sensors_si2019/HILNetSimTracing.h>
 #include <sensors_si2019/utils.hpp>
 #include <tf/transform_listener.h>
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <umci/DcMac.h>
 
 namespace sensors_si2019 {
 
 using namespace dccomms_packets;
 using namespace utils;
+using namespace umci;
 
 HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   e1_pub = node.advertise<geometry_msgs::TwistStamped>(
@@ -29,6 +32,10 @@ HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
       "/uwsim/explorer2_2/velocity", 1);
   e3_2pub = node.advertise<geometry_msgs::TwistStamped>(
       "/uwsim/explorer3_2/velocity", 1);
+
+  pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
+  use_rf_channels = false;
+  use_umci_mac = false;
 }
 
 void HILNetSimTracing::PacketTransmitting(std::string path,
@@ -226,7 +233,8 @@ void HILNetSimTracing::GetExplorerLinearVel(const double &diffx,
   vz = diffz * kp;
 }
 
-void HILNetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
+void HILNetSimTracing::explorerTxWork(int src, int dst,
+                                      CommsDeviceServicePtr &stream,
                                       std::mutex &mutex,
                                       const tf::Transform &wMeRef) {
   auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
@@ -235,15 +243,7 @@ void HILNetSimTracing::explorerTxWork(int src, CommsDeviceServicePtr &stream,
   int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
           *pitch = roll + 1, *yaw = pitch + 1;
   double tmp_roll, tmp_pitch, tmp_yaw;
-  int dst;
   pkt->SetSrcAddr(src);
-  if (acoustic)
-    dst = 0;
-  else if (src > 5)
-    dst = 5;
-  else
-    dst = 1;
-
   pkt->SetDestAddr(dst);
 
   uint32_t seq = 0;
@@ -301,6 +301,80 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
       received = true;
       mutex.unlock();
     }
+  }
+}
+
+CommsDeviceServicePtr
+HILNetSimTracing::ConfigureDcMacLayerOnBuoy(const int &addr) {
+  auto dcmac = dccomms::CreateObject<DcMac>();
+  dcmac->SetPktBuilder(pb);
+  dcmac->SetAddr(addr);
+  dcmac->SetDevBitRate(6900);
+  dcmac->SetDevIntrinsicDelay(1);
+  dcmac->SetMaxDistance(100);
+  dcmac->SetPropSpeed(1500);
+  dcmac->SetMaxDataSlotDur(1000);
+  dcmac->UpdateSlotDurFromEstimation();
+  dcmac->SetMode(DcMac::Mode::master);
+  if (use_rf_channels) {
+    dcmac->SetNumberOfNodes(4);
+  } else {
+    dcmac->SetNumberOfNodes(9);
+  }
+}
+CommsDeviceServicePtr
+HILNetSimTracing::ConfigureDcMacLayerOnExplorer(const int &addr) {
+  auto dcmac = dccomms::CreateObject<DcMac>();
+  if (use_rf_channels) {
+    dcmac->SetPktBuilder(pb);
+    dcmac->SetAddr(addr);
+    dcmac->SetDevBitRate(1900);
+    dcmac->SetDevIntrinsicDelay(1);
+    dcmac->SetMaxDistance(5);
+    dcmac->SetPropSpeed(3e8);
+    dcmac->SetNumberOfNodes(4);
+    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->UpdateSlotDurFromEstimation();
+    dcmac->SetMode(DcMac::Mode::slave);
+  } else {
+    dcmac->SetPktBuilder(pb);
+    dcmac->SetAddr(addr);
+    dcmac->SetDevBitRate(6900);
+    dcmac->SetDevIntrinsicDelay(1);
+    dcmac->SetMaxDistance(100);
+    dcmac->SetPropSpeed(1500);
+    dcmac->SetNumberOfNodes(9);
+    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->UpdateSlotDurFromEstimation();
+    dcmac->SetMode(DcMac::Mode::slave);
+  }
+}
+
+CommsDeviceServicePtr
+HILNetSimTracing::ConfigureDcMacLayerOnLeader(const int &addr, const bool &rf) {
+  auto dcmac = dccomms::CreateObject<DcMac>();
+  if (rf) {
+    dcmac->SetPktBuilder(pb);
+    dcmac->SetAddr(addr);
+    dcmac->SetDevBitRate(1900);
+    dcmac->SetDevIntrinsicDelay(1);
+    dcmac->SetMaxDistance(5);
+    dcmac->SetPropSpeed(3e8);
+    dcmac->SetNumberOfNodes(4);
+    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->UpdateSlotDurFromEstimation();
+    dcmac->SetMode(DcMac::Mode::master);
+  } else {
+    dcmac->SetPktBuilder(pb);
+    dcmac->SetAddr(addr);
+    dcmac->SetDevBitRate(6900);
+    dcmac->SetDevIntrinsicDelay(1);
+    dcmac->SetMaxDistance(100);
+    dcmac->SetPropSpeed(1500);
+    dcmac->SetNumberOfNodes(9);
+    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->UpdateSlotDurFromEstimation();
+    dcmac->SetMode(DcMac::Mode::master);
   }
 }
 
@@ -646,12 +720,124 @@ void HILNetSimTracing::DoRun() {
   });
   explorersWork.detach();
 
-  pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
+  buoy_addr = 0;
 
-  // BUOY
-  buoy = dccomms::CreateObject<CommsDeviceService>(pb);
+  if (use_umci_mac) {
+
+    // Si usamos una capa mac externa a UWSim-NET podemos repetir las mac. No
+    // obstante, en el xml estas mac han de ser diferente para no producir
+    // error.
+
+    if (use_rf_channels) {
+      hil_ac_addr = 1;
+      hil_rf_addr = 0;
+      e1_addr = 1;
+      e2_addr = 2;
+      e3_addr = 3;
+
+      leader1_ac_addr = 2;
+      leader1_rf_addr = 0;
+      e1_2_addr = 1;
+      e2_2_addr = 2;
+      e3_2_addr = 3;
+
+      t0_dst = hil_rf_addr;
+      t1_dst = leader1_rf_addr;
+
+      hil_rf = ConfigureDcMacLayerOnLeader(hil_rf_addr, true);
+      leader1_rf = ConfigureDcMacLayerOnLeader(leader1_rf_addr, true);
+
+    } else {
+      hil_ac_addr = 1;
+      e1_addr = 2;
+      e2_addr = 3;
+      e3_addr = 4;
+
+      leader1_ac_addr = 5;
+      e1_2_addr = 6;
+      e2_2_addr = 7;
+      e3_2_addr = 8;
+
+      t0_dst = buoy_addr;
+      t1_dst = buoy_addr;
+    }
+
+    buoy = ConfigureDcMacLayerOnBuoy();
+    hil_ac = ConfigureDcMacLayerOnLeader(hil_ac_addr, false);
+    e1 = ConfigureDcMacLayerOnExplorer(e1_addr);
+    e2 = ConfigureDcMacLayerOnExplorer(e2_addr);
+    e3 = ConfigureDcMacLayerOnExplorer(e3_addr);
+
+    leader1_ac = ConfigureDcMacLayerOnLeader(leader1_ac_addr, false);
+    e1_2 = ConfigureDcMacLayerOnExplorer(e1_2_addr);
+    e2_2 = ConfigureDcMacLayerOnExplorer(e2_2_addr);
+    e3_2 = ConfigureDcMacLayerOnExplorer(e3_2_addr);
+
+  } else {
+
+    // Si usamos una capa mac implementada en UWSim-NET las mac han de ser
+    // diferentes para cada dispositivo. TODO: permitir repeticion de macs en
+    // UWSim-NET
+    hil_ac_addr = 1;
+    hil_rf_addr = 2;
+    e1_addr = 3;
+    e2_addr = 4;
+    e3_addr = 5;
+    leader1_ac_addr = 6;
+    leader1_rf_addr = 7;
+    e1_2_addr = 8;
+    e2_2_addr = 9;
+    e3_2_addr = 10;
+
+    if (use_rf_channels) {
+      t0_dst = hil_rf_addr;
+      t1_dst = leader1_rf_addr;
+
+      hil_rf = dccomms::CreateObject<CommsDeviceService>(pb);
+      leader1_rf = dccomms::CreateObject<CommsDeviceService>(pb);
+
+    } else {
+      t0_dst = buoy_addr;
+      t1_dst = buoy_addr;
+    }
+
+    buoy = dccomms::CreateObject<CommsDeviceService>(pb);
+    hil_ac = dccomms::CreateObject<CommsDeviceService>(pb);
+    e1 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e2 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e3 = dccomms::CreateObject<CommsDeviceService>(pb);
+    leader1_ac = dccomms::CreateObject<CommsDeviceService>(pb);
+    e1_2 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e2_2 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e3_2 = dccomms::CreateObject<CommsDeviceService>(pb);
+  }
+
+  if (use_rf_channels) {
+    hil_rf->SetCommsDeviceId("comms_hil_rf");
+    hil_rf->Start();
+    leader1_rf->SetCommsDeviceId("comms_leader1_rf");
+    leader1_rf->Start();
+  }
+
+  hil_ac->SetCommsDeviceId("comms_hil_ac");
+  hil_ac->Start();
+  leader1_ac->SetCommsDeviceId("comms_leader1_ac");
+  leader1_ac->Start();
+
   buoy->SetCommsDeviceId("comms_buoy");
   buoy->Start();
+  e1->SetCommsDeviceId("comms_explorer1");
+  e1->Start();
+  e2->SetCommsDeviceId("comms_explorer2");
+  e2->Start();
+  e3->SetCommsDeviceId("comms_explorer3");
+  e3->Start();
+  e1_2->SetCommsDeviceId("comms_explorer1_2");
+  e1_2->Start();
+  e2_2->SetCommsDeviceId("comms_explorer2_2");
+  e2_2->Start();
+  e3_2->SetCommsDeviceId("comms_explorer3_2");
+  e3_2->Start();
 
   std::thread buoyRxWork([&]() {
     auto pkt = pb->Create();
@@ -785,27 +971,16 @@ void HILNetSimTracing::DoRun() {
   buoyTxWork.detach();
 
   // TEAM 1
-  hil = dccomms::CreateObject<CommsDeviceService>(pb);
-  hil->SetCommsDeviceId("comms_hil");
-  hil->Start();
 
-  e1 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e1->SetCommsDeviceId("comms_explorer1");
-  e1->Start();
-
-  e2 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e2->SetCommsDeviceId("comms_explorer2");
-  e2->Start();
-
-  e3 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e3->SetCommsDeviceId("comms_explorer3");
-  e3->Start();
-
-  std::thread e1_tx_Work([&]() { explorerTxWork(2, e1, wMe1_mutex, wMe1); });
-  std::thread e2_tx_Work([&]() { explorerTxWork(3, e2, wMe1_mutex, wMe1); });
-  std::thread e3_tx_Work([&]() { explorerTxWork(4, e3, wMe2_mutex, wMe2); });
+  std::thread e1_tx_Work(
+      [&]() { explorerTxWork(e1_addr, t0_dst, e1, wMe1_mutex, wMe1); });
+  std::thread e2_tx_Work(
+      [&]() { explorerTxWork(e2_addr, t0_dst, e2, wMe1_mutex, wMe1); });
+  std::thread e3_tx_Work(
+      [&]() { explorerTxWork(e3_addr, t0_dst, e3, wMe2_mutex, wMe2); });
   std::thread e1_rx_Work([&]() {
-    explorerRxWork(2, e1, wMhil_comms_mutex, wMhil_comms, wMhil_comms_received);
+    explorerRxWork(e1_addr, e1, wMhil_comms_mutex, wMhil_comms,
+                   wMhil_comms_received);
   });
 
   e1_tx_Work.detach();
@@ -814,21 +989,6 @@ void HILNetSimTracing::DoRun() {
   e1_rx_Work.detach();
 
   // TEAM 2
-  leader1 = dccomms::CreateObject<CommsDeviceService>(pb);
-  leader1->SetCommsDeviceId("comms_leader1");
-  leader1->Start();
-
-  e1_2 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e1_2->SetCommsDeviceId("comms_explorer1_2");
-  e1_2->Start();
-
-  e2_2 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e2_2->SetCommsDeviceId("comms_explorer2_2");
-  e2_2->Start();
-
-  e3_2 = dccomms::CreateObject<CommsDeviceService>(pb);
-  e3_2->SetCommsDeviceId("comms_explorer3_2");
-  e3_2->Start();
 
   std::thread leader1TxWork([&]() {
     auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
@@ -899,13 +1059,14 @@ void HILNetSimTracing::DoRun() {
   });
 
   std::thread e1_2_tx_Work(
-      [&]() { explorerTxWork(6, e1_2, wMe1_2_mutex, wMe1_2); });
+      [&]() { explorerTxWork(e1_2_addr, t1_dst, e1_2, wMe1_2_mutex, wMe1_2); });
   std::thread e2_2_tx_Work(
-      [&]() { explorerTxWork(7, e2_2, wMe1_2_mutex, wMe1_2); });
+      [&]() { explorerTxWork(e2_2_addr, t1_dst, e2_2, wMe1_2_mutex, wMe1_2); });
   std::thread e3_2_tx_Work(
-      [&]() { explorerTxWork(8, e3_2, wMe2_2_mutex, wMe2_2); });
+      [&]() { explorerTxWork(e3_2_addr, t1_dst, e3_2, wMe2_2_mutex, wMe2_2); });
   std::thread e1_2_rx_Work([&]() {
-    explorerRxWork(6, e1_2, wMl1_comms_mutex, wMl1_comms, wMl1_comms_received);
+    explorerRxWork(e1_2_addr, e1_2, wMl1_comms_mutex, wMl1_comms,
+                   wMl1_comms_received);
   });
 
   leader1RxWork.detach();
@@ -917,4 +1078,7 @@ void HILNetSimTracing::DoRun() {
 }
 
 CLASS_LOADER_REGISTER_CLASS(HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(RF_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(RF_UMCIMAC_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UMCIMAC_HILNetSimTracing, NetSimTracing)
 } // namespace sensors_si2019

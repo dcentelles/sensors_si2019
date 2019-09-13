@@ -69,7 +69,7 @@
   -->
 
   <netTracingScript>
-    <className>HILNetSimTracing</className>
+    <className>tracingscript</className>
     <libPath>libsensors_si2019_netsim_scripts.so</libPath>
     <logToFile>uwsimnet.log</logToFile>
   </netTracingScript>
@@ -128,7 +128,7 @@
       <relativeTo>base_link</relativeTo>
       <mac>0</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
       <bitrate>6900</bitrate>
       <txFifoSize>500</txFifoSize>
@@ -161,10 +161,10 @@
         <errorRateExpr>0.0000</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
 
       <logLevel>warn</logLevel>
@@ -204,17 +204,17 @@
     </virtualCamera>
 
     <CustomCommsDevice>
-      <dccommsId>comms_hil</dccommsId>
+      <dccommsId>comms_hil_ac</dccommsId>
       <txChannelId>0</txChannelId>
       <rxChannelId>0</rxChannelId>
       <relativeTo>base_link</relativeTo>
       <mac>1</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
       <bitrate>6900</bitrate>
       <txFifoSize>500</txFifoSize>
-      <tfId>comms_hil</tfId>
+      <tfId>comms_hil_ac</tfId>
       <position>
         <x>-0.15</x>
         <y>0.14</y>
@@ -241,13 +241,61 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
+
+    <CustomCommsDevice>
+      <dccommsId>comms_hil_rf</dccommsId>
+      <txChannelId>1</txChannelId>
+      <rxChannelId>1</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>2</mac>
+      <macProtocol>
+        <name>macprotocol</name>
+      </macProtocol>
+      <bitrate>1900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_hil_rf</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>-3.1415</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>packetbuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>packetbuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+      <disable>disablerf</disable>
+    </CustomCommsDevice>
+
   </vehicle>
 
    <!-- explorer 1 -->
@@ -266,14 +314,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer1</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>2</mac>
+      <mac>3</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer1</tfId>
       <position>
@@ -302,10 +350,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -327,14 +375,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer2</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>3</mac>
+      <mac>4</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer2</tfId>
       <position>
@@ -363,10 +411,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -388,14 +436,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer3</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>4</mac>
+      <mac>5</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer3</tfId>
       <position>
@@ -424,10 +472,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -454,17 +502,17 @@
     </orientation>
 
     <CustomCommsDevice>
-      <dccommsId>comms_leader1</dccommsId>
+      <dccommsId>comms_leader1_ac</dccommsId>
       <txChannelId>0</txChannelId>
       <rxChannelId>0</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>5</mac>
+      <mac>6</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
       <bitrate>6900</bitrate>
       <txFifoSize>500</txFifoSize>
-      <tfId>comms_leader1</tfId>
+      <tfId>comms_leader1_ac</tfId>
       <position>
         <x>-0.15</x>
         <y>0.14</y>
@@ -491,13 +539,61 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
+
+    <CustomCommsDevice>
+      <dccommsId>comms_leader1_rf</dccommsId>
+      <txChannelId>1</txChannelId>
+      <rxChannelId>1</rxChannelId>
+      <relativeTo>base_link</relativeTo>
+      <mac>7</mac>
+      <macProtocol>
+        <name>macprotocol</name>
+      </macProtocol>
+      <bitrate>1900</bitrate>
+      <txFifoSize>500</txFifoSize>
+      <tfId>comms_leader1_rf</tfId>
+      <position>
+        <x>-0.15</x>
+        <y>0.14</y>
+        <z>-0.03</z>
+      </position>
+      <orientation>
+        <r>-3.1415</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>        
+      <mesh>
+        <path>data/objects/s2cr.3ds</path>
+        <scaleFactor>
+          <x>0.0005</x>
+          <y>0.0005</y>
+          <z>0.0005</z>
+        </scaleFactor>
+      </mesh>
+      <intrinsicDelay>1</intrinsicDelay>
+      <maxDistance>100</maxDistance>
+      <minDistance>0</minDistance>
+      <rateErrorModel>
+        <errorUnit>bit</errorUnit>
+        <errorRateExpr>0.0</errorRateExpr>
+      </rateErrorModel>
+      <txPacketBuilder>
+        <className>packetbuilder</className>
+      </txPacketBuilder>
+      <rxPacketBuilder>
+        <className>packetbuilder</className>
+      </rxPacketBuilder>
+      <logLevel>info</logLevel>
+      <disable>disablerf</disable>
+    </CustomCommsDevice>
+
   </vehicle>
 
    <!-- explorer 1 -->
@@ -516,14 +612,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer1_2</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>6</mac>
+      <mac>8</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer1_2</tfId>
       <position>
@@ -552,10 +648,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -577,14 +673,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer2_2</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>7</mac>
+      <mac>9</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer2_2</tfId>
       <position>
@@ -613,10 +709,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -638,14 +734,14 @@
     </orientation>
     <CustomCommsDevice>
       <dccommsId>comms_explorer3_2</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
+      <txChannelId>echannel</txChannelId>
+      <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>8</mac>
+      <mac>10</mac>
       <macProtocol>
-        <name>aloha</name>
+        <name>macprotocol</name>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>ebitrate</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer3_2</tfId>
       <position>
@@ -674,10 +770,10 @@
         <errorRateExpr>0.0</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </txPacketBuilder>
       <rxPacketBuilder>
-        <className>VariableLengthPacketBuilder</className>
+        <className>packetbuilder</className>
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -1159,8 +1255,14 @@
     </ROSTwistToPAT>  
 
     <CustomCommsDeviceROS>
-      <name>comms_hil</name>
-      <topic>hil/comms</topic>
+      <name>comms_hil_ac</name>
+      <topic>hil/comms_ac</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>comms_hil_rf</name>
+      <topic>hil/comms_rf</topic>
       <rate>5</rate>
     </CustomCommsDeviceROS>
 
@@ -1171,8 +1273,14 @@
     </CustomCommsDeviceROS>
 
     <CustomCommsDeviceROS>
-      <name>comms_leader1</name>
-      <topic>/uwsim/leader1/comms</topic>
+      <name>comms_leader1_ac</name>
+      <topic>/uwsim/leader1/comms_ac</topic>
+      <rate>5</rate>
+    </CustomCommsDeviceROS>
+   
+    <CustomCommsDeviceROS>
+      <name>comms_leader1_rf</name>
+      <topic>/uwsim/leader1/comms_rf</topic>
       <rate>5</rate>
     </CustomCommsDeviceROS>
 
