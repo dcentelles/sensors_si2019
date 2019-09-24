@@ -66,28 +66,21 @@ public:
   CommsDeviceServicePtr ConfigureDcMacLayerOnBuoy(const int &addr = 0);
 
   dccomms::Ptr<VariableLengthPacketBuilder> pb;
-  dccomms::CommsDeviceServicePtr buoy, hil, hil_rf, hil_ac, leader1, leader1_rf,
-      leader1_ac, e1, e2, e3, e1_2, e2_2, e3_2;
+  dccomms::CommsDeviceServicePtr buoy, hil, hil_rf, hil_ac, e1, e2, e3;
 
-  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMl1_mutex, wMe0_2_mutex,
-      wMe1_2_mutex, wMe2_2_mutex, wMe3_2_mutex, wMhil_comms_mutex,
-      wMl1_comms_mutex, wMtl1_comms_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3, e1_2Mte1_2, e2_2Mte2_2, e3_2Mte3_2,
-      wMtl1_comms, l1Mtl1;
-  tf::StampedTransform hilMte1, hilMte2, hilMte3, l1Mte1_2, l1Mte2_2, l1Mte3_2,
-      wMe1, wMe2, wMe3, wMl1, wMe1_2, wMe2_2, wMe3_2;
+  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMhil_comms_mutex;
+  tf::Transform e1Mte1, e2Mte2, e3Mte3;
+  tf::StampedTransform hilMte1, hilMte2, hilMte3, wMe1, wMe2, wMe3;
 
-  tf::Transform wMhil_comms, wMl1_comms;
-  bool wMhil_comms_received = false, wMl1_comms_received = false,
-       wMtl1_received = false;
+  tf::Transform wMhil_comms;
+  bool wMhil_comms_received = false;
   void explorerTxWork(int src, int dst, CommsDeviceServicePtr &stream,
                       std::mutex &mutex, const tf::Transform &wMeRef);
   void explorerRxWork(int src, CommsDeviceServicePtr &stream, std::mutex &mutex,
                       tf::Transform &wMl_comms, bool &received);
 
-  int16_t buoy_addr, hil_ac_addr, e1_addr, e2_addr, e3_addr, e1_2_addr,
-      e2_2_addr, e3_2_addr, hil_rf_addr, leader1_ac_addr, leader1_rf_addr,
-      t0_dst, t1_dst;
+  int16_t buoy_addr, hil_ac_addr, e1_addr, e2_addr, e3_addr, hil_rf_addr,
+      t0_dst;
 
 protected:
   bool use_rf_channels;
