@@ -15,7 +15,6 @@ namespace sensors_si2019 {
 using namespace dccomms_packets;
 using namespace utils;
 using namespace umci;
-
 HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   e1_pub = node.advertise<geometry_msgs::TwistStamped>(
       "/uwsim/explorer1/velocity", 1);
@@ -33,9 +32,11 @@ HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   e3_2pub = node.advertise<geometry_msgs::TwistStamped>(
       "/uwsim/explorer3_2/velocity", 1);
 
-  pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
+  pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
   use_rf_channels = false;
   use_umci_mac = false;
+  params.sitl = true;
+  op = dccomms::CreateObject<OperatorController>(params);
 }
 
 void HILNetSimTracing::PacketTransmitting(std::string path,
@@ -237,7 +238,7 @@ void HILNetSimTracing::explorerTxWork(int src, int dst,
                                       CommsDeviceServicePtr &stream,
                                       std::mutex &mutex,
                                       const tf::Transform &wMeRef) {
-  auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
+  auto pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
   auto pkt = pb->Create();
   auto pd = pkt->GetPayloadBuffer();
   int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
@@ -274,7 +275,7 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
                                       std::mutex &mutex,
                                       tf::Transform &wMl_comms,
                                       bool &received) {
-  auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
+  auto pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
   auto pkt = pb->Create();
   auto pd = pkt->GetPayloadBuffer();
   int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
@@ -295,11 +296,11 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
            pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), pos.x(),
            pos.y(), pos.z(), droll, dpitch, dyaw);
 
-      mutex.lock();
-      wMl_comms.setOrigin(pos);
-      wMl_comms.setRotation(rot);
-      received = true;
-      mutex.unlock();
+      //      mutex.lock();
+      //      wMl_comms.setOrigin(pos);
+      //      wMl_comms.setRotation(rot);
+      //      received = true;
+      //      mutex.unlock();
     }
   }
 }
@@ -380,24 +381,92 @@ HILNetSimTracing::ConfigureDcMacLayerOnLeader(const int &addr, const bool &rf) {
 
 void HILNetSimTracing::DoRun() {
 
-  std::thread gpsWork([&]() {
+  op->SetReferenceTfName("local_origin_ned");
+
+  op->ControlState.mode = FLY_MODE_R::MANUAL;
+  op->ControlState.arm = false;
+  op->ControlState.x = 0;
+  op->ControlState.y = 0;
+  op->ControlState.z = 0;
+  op->ControlState.r = 0;
+
+  op->Start();
+
+  std::thread reachInitPos([&]() {
+    tf::TransformBroadcaster sender;
     tf::TransformListener listener;
+    tf::StampedTransform hilMinit;
+    op->SetRobotTfName("hil");
+    op->SetDesiredPosTfName("hil_init");
+
+    tf::Vector3 origin(0, 0, 0);
     while (1) {
       try {
+        listener.lookupTransform("hil", "hil_init", ros::Time(0), hilMinit);
+        if (hilMinit.getOrigin().distance(origin) > 0.2) {
+          op->ControlState.mode = FLY_MODE_R::GUIDED;
+          op->ControlState.arm = true;
+        } else {
+          initPosReached = true;
+          op->SetDesiredPosTfName("hil_target");
+          op->ResetPID();
+          break;
+        }
+
+      } catch (tf::TransformException &ex) {
+        op->ResetPID();
+        Warn("TF: {}", ex.what());
+        std::this_thread::sleep_for(chrono::milliseconds(100));
+        continue;
+      }
+    }
+  });
+  reachInitPos.detach();
+
+  std::thread gpsWork([&]() {
+    tf2_ros::StaticTransformBroadcaster static_broadcaster;
+    std::vector<geometry_msgs::TransformStamped> static_transforms;
+    geometry_msgs::TransformStamped static_transformStamped;
+    tf::TransformListener listener;
+    tf::Quaternion rotation;
+    rotation.setRPY(0, 0, 0);
+    static_transformStamped.header.stamp = ros::Time::now();
+    static_transformStamped.header.frame_id = "local_origin_ned";
+    static_transformStamped.child_frame_id = "hil_init";
+    static_transformStamped.transform.translation.x = 0;
+    static_transformStamped.transform.translation.y = 0;
+    static_transformStamped.transform.translation.z = 0.85;
+    static_transformStamped.transform.rotation.x = rotation.getX();
+    static_transformStamped.transform.rotation.y = rotation.getY();
+    static_transformStamped.transform.rotation.z = rotation.getZ();
+    static_transformStamped.transform.rotation.w = rotation.getW();
+    static_transforms.push_back(static_transformStamped);
+    static_broadcaster.sendTransform(static_transforms);
+
+    while (1) {
+      try {
+        std::unique_lock<std::mutex> wMhil_lock(wMhil_mutex);
+        listener.lookupTransform("local_origin_ned", "hil", ros::Time(0),
+                                 wMhil);
+        wMhil_lock.unlock();
 
         std::unique_lock<std::mutex> wMe1_lock(wMe1_mutex);
-        listener.lookupTransform("world", "explorer1", ros::Time(0), wMe1);
+        listener.lookupTransform("local_origin_ned", "explorer1", ros::Time(0),
+                                 wMe1);
         wMe1_lock.unlock();
 
         std::unique_lock<std::mutex> wMe2_lock(wMe2_mutex);
-        listener.lookupTransform("world", "explorer2", ros::Time(0), wMe2);
+        listener.lookupTransform("local_origin_ned", "explorer2", ros::Time(0),
+                                 wMe2);
         wMe2_lock.unlock();
 
         std::unique_lock<std::mutex> wMe3_lock(wMe3_mutex);
-        listener.lookupTransform("world", "explorer3", ros::Time(0), wMe3);
+        listener.lookupTransform("local_origin_ned", "explorer3", ros::Time(0),
+                                 wMe3);
         wMe3_lock.unlock();
 
       } catch (tf::TransformException &ex) {
+        op->ResetPID();
         Warn("TF: {}", ex.what());
         std::this_thread::sleep_for(chrono::milliseconds(100));
         continue;
@@ -412,88 +481,52 @@ void HILNetSimTracing::DoRun() {
     geometry_msgs::TransformStamped static_transformStamped;
     std::vector<geometry_msgs::TransformStamped> static_transforms;
     geometry_msgs::TwistStamped explorer_msg;
+    tf::TransformBroadcaster broadcaster;
 
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
 
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "hil";
-    static_transformStamped.child_frame_id = "te1";
-    static_transformStamped.transform.translation.x = 0;
-    static_transformStamped.transform.translation.y = -1.5;
-    static_transformStamped.transform.translation.z = 0;
-    static_transformStamped.transform.rotation.x = rotation.x();
-    static_transformStamped.transform.rotation.y = rotation.y();
-    static_transformStamped.transform.rotation.z = rotation.z();
-    static_transformStamped.transform.rotation.w = rotation.w();
-    static_transforms.push_back(static_transformStamped);
+    hilMte1.setOrigin(tf::Vector3(0, -1.5, 0));
+    hilMte2.setOrigin(tf::Vector3(-1.5, -1.5, 0));
+    hilMte3.setOrigin(tf::Vector3(-1.5, 0, 0));
 
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "hil";
-    static_transformStamped.child_frame_id = "te2";
-    static_transformStamped.transform.translation.x = -1.5;
-    static_transformStamped.transform.translation.y = -1.5;
-    static_transformStamped.transform.translation.z = 0;
-    static_transformStamped.transform.rotation.x = rotation.x();
-    static_transformStamped.transform.rotation.y = rotation.y();
-    static_transformStamped.transform.rotation.z = rotation.z();
-    static_transformStamped.transform.rotation.w = rotation.w();
-    static_transforms.push_back(static_transformStamped);
+    hilMte1.setRotation(rotation);
+    hilMte2.setRotation(rotation);
+    hilMte3.setRotation(rotation);
 
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "hil";
-    static_transformStamped.child_frame_id = "te3";
-    static_transformStamped.transform.translation.x = -1.5;
-    static_transformStamped.transform.translation.y = 0;
-    static_transformStamped.transform.translation.z = 0;
-    static_transformStamped.transform.rotation.x = rotation.x();
-    static_transformStamped.transform.rotation.y = rotation.y();
-    static_transformStamped.transform.rotation.z = rotation.z();
-    static_transformStamped.transform.rotation.w = rotation.w();
-    static_transforms.push_back(static_transformStamped);
-
-    static_broadcaster.sendTransform(static_transforms);
     ros::Rate rate(10);
     while (1) {
-      try {
-        listener.lookupTransform("hil", "te1", ros::Time(0), hilMte1);
-        listener.lookupTransform("hil", "te2", ros::Time(0), hilMte2);
-        listener.lookupTransform("hil", "te3", ros::Time(0), hilMte3);
-        break;
-      } catch (tf::TransformException &ex) {
-        Warn("TF: {}", ex.what());
+      if (!wMhil_comms_received || !wMthil_comms_received) {
+        std::this_thread::sleep_for(chrono::seconds(1));
         continue;
       }
-    }
-    while (1) {
-      tf::StampedTransform e1Mte1_aux, e2Mte2_aux, e3Mte3_aux;
-      while (1) {
+      if (wMthil_comms_received) {
+        op->ControlState.mode = FLY_MODE_R::GUIDED;
         try {
-          // tmp
-          listener.lookupTransform("explorer1", "te1", ros::Time(0),
-                                   e1Mte1_aux);
-          listener.lookupTransform("explorer2", "te2", ros::Time(0),
-                                   e2Mte2_aux);
-          listener.lookupTransform("explorer3", "te3", ros::Time(0),
-                                   e3Mte3_aux);
-          break;
+          broadcaster.sendTransform(
+              tf::StampedTransform(wMthil_comms, ros::Time::now(),
+                                   "local_origin_ned", "hil_target"));
+
         } catch (tf::TransformException &ex) {
+          op->ResetPID();
           Warn("TF: {}", ex.what());
-          continue;
+          std::this_thread::sleep_for(chrono::milliseconds(100));
         }
       }
-      // if (!wMhil_comms_received || !wMl1_comms_received || !wMtl1_received) {
-      //      if (!wMl1_comms_received || !wMtl1_received) {
-      //        std::this_thread::sleep_for(chrono::seconds(1));
-      //        continue;
-      //      }
+
       // Compute target transform from every slave in team 1 (input: hil
       // position from comms)
+      wMe1_mutex.lock();
+      wMe2_mutex.lock();
+      wMe3_mutex.lock();
       wMhil_comms_mutex.lock();
-      e1Mte1 = e1Mte1_aux; // wMe1.inverse() * wMhil_comms * hilMte1;
-      e2Mte2 = e2Mte2_aux; // wMe2.inverse() * wMhil_comms * hilMte2;
-      e3Mte3 = e3Mte3_aux; // wMe3.inverse() * wMhil_comms * hilMte3;
+      e1Mte1 = wMe1.inverse() * wMhil_comms * hilMte1;
+      e2Mte2 = wMe2.inverse() * wMhil_comms * hilMte2;
+      e3Mte3 = wMe3.inverse() * wMhil_comms * hilMte3;
       wMhil_comms_mutex.unlock();
+      wMe1_mutex.unlock();
+      wMe2_mutex.unlock();
+      wMe3_mutex.unlock();
 
       // Get Translations
       //    team 1
@@ -644,19 +677,36 @@ void HILNetSimTracing::DoRun() {
   e3->Start();
 
   std::thread buoyRxWork([&]() {
+    auto pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
     auto pkt = pb->Create();
     auto pd = pkt->GetPayloadBuffer();
-    uint8_t *nrovs = pd;
     int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
             *pitch = roll + 1, *yaw = pitch + 1;
+    tf::Vector3 pos;
+    double droll, dpitch, dyaw;
+    tf::Quaternion rot;
+    tf::TransformBroadcaster tf_broadcaster;
     while (true) {
       buoy >> pkt;
       if (pkt->PacketIsOk()) {
-        uint32_t seq = pkt->GetSeq();
-        Info("BUOY: RX FROM {} SEQ {} SIZE {}", pkt->GetSrcAddr(), seq,
-             pkt->GetPacketSize());
-      } else
-        Warn("BUOY: ERR");
+        // we have received the position of the leader
+        pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
+        droll = GetContinuousRot(*roll);
+        dpitch = GetContinuousRot(*pitch);
+        dyaw = GetContinuousRot(*yaw);
+        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
+        Info("BUOY: RX FROM {} SEQ {} SIZE {} LP: {} {} {} {} {} {}",
+             pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), pos.x(),
+             pos.y(), pos.z(), droll, dpitch, dyaw);
+
+        if (pkt->GetSrcAddr() == hil_ac_addr) {
+          wMhil_comms_mutex.lock();
+          wMhil_comms.setOrigin(pos);
+          wMhil_comms.setRotation(rot);
+          wMhil_comms_received = true;
+          wMhil_comms_mutex.unlock();
+        }
+      }
     }
   });
 
@@ -687,12 +737,13 @@ void HILNetSimTracing::DoRun() {
     uint32_t l0seq = 0, l1seq = 0;
 
     int targetPositionIndex = 0;
-    tf::Transform originMl1t, wMorigin, wMtl1;
-    // World to NED = wMorigin
-    wMorigin.setOrigin(tf::Vector3(0, 0, -10));
     std::vector<double> nextTarget;
-    wMorigin.setRotation(tf::createQuaternionFromRPY(-M_PI, 0, 0));
     while (1) {
+      if (!initPosReached) {
+        std::this_thread::sleep_for(chrono::seconds(1));
+        continue;
+      }
+
       uint idx = static_cast<uint>(targetPositionIndex);
 
       // Update leader0 position
@@ -734,75 +785,81 @@ void HILNetSimTracing::DoRun() {
   e3_tx_Work.detach();
   e1_rx_Work.detach();
 
-  // TEAM 2
+  if (use_rf_channels) {
+    hil_large = hil_ac;
+    hil_short = hil_rf;
+  } else {
+    hil_large = hil_ac;
+    hil_short = hil_ac;
+  }
+  std::thread hilTxWork([&]() {
+    auto pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
+    auto pkt = pb->Create();
+    auto pd = pkt->GetPayloadBuffer();
+    int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
+            *pitch = roll + 1, *yaw = pitch + 1;
+    double tmp_roll, tmp_pitch, tmp_yaw;
+    pkt->SetSrcAddr(hil_ac_addr);
 
-  //  std::thread leader1TxWork([&]() {
-  //    auto pb = dccomms::CreateObject<VariableLengthPacketBuilder>();
-  //    auto pkt = pb->Create();
-  //    auto pd = pkt->GetPayloadBuffer();
-  //    int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
-  //            *pitch = roll + 1, *yaw = pitch + 1;
-  //    double tmp_roll, tmp_pitch, tmp_yaw;
-  //    int dst;
-  //    pkt->SetSrcAddr(5);
-  //    dst = 6;
-  //    pkt->SetDestAddr(dst);
+    uint32_t seq = 0;
+    uint32_t pdSize = 1 + 12;
+    tf::Transform position;
+    while (true) {
+      wMhil_mutex.lock();
+      position = wMhil;
+      wMhil_mutex.unlock();
+      *x = position.getOrigin().x() * 100;
+      *y = position.getOrigin().y() * 100;
+      *z = position.getOrigin().z() * 100;
+      position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
+      *roll = GetDiscreteRot(tmp_roll);
+      *pitch = GetDiscreteRot(tmp_pitch);
+      *yaw = GetDiscreteRot(tmp_yaw);
 
-  //    uint32_t seq = 0;
-  //    uint32_t pdSize = 1 + 12;
-  //    tf::Transform position;
-  //    while (true) {
-  //      wMl1_mutex.lock();
-  //      position = wMl1;
-  //      wMl1_mutex.unlock();
-  //      *x = position.getOrigin().x() * 100;
-  //      *y = position.getOrigin().y() * 100;
-  //      *z = position.getOrigin().z() * 100;
-  //      position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-  //      *roll = GetDiscreteRot(tmp_roll);
-  //      *pitch = GetDiscreteRot(tmp_pitch);
-  //      *yaw = GetDiscreteRot(tmp_yaw);
+      pkt->SetSeq(seq++);
+      pkt->SetDestAddr(buoy_addr);
+      pkt->PayloadUpdated(pdSize);
 
-  //      pkt->SetSeq(seq++);
-  //      pkt->PayloadUpdated(pdSize);
-  //      leader1 << pkt;
-  //      Info("L1: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
-  //           pkt->GetSeq());
+      hil_large << pkt;
+      Info("HIL: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
+           pkt->GetSeq());
 
-  //      std::this_thread::sleep_for(chrono::seconds(5));
-  //    }
-  //  });
+      std::this_thread::sleep_for(chrono::seconds(5));
+    }
+  });
+  hilTxWork.detach();
 
-  //  std::thread leader1RxWork([&]() {
-  //    auto pkt = pb->Create();
-  //    auto pd = pkt->GetPayloadBuffer();
-  //    int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
-  //            *pitch = roll + 1, *yaw = pitch + 1;
-  //    tf::Vector3 pos;
-  //    double droll, dpitch, dyaw;
-  //    tf::Quaternion rot;
-  //    while (true) {
-  //      leader1 >> pkt;
-  //      if (pkt->PacketIsOk()) {
-  //        // we have received the desired position from the buoy
-  //        pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
-  //        droll = GetContinuousRot(*roll);
-  //        dpitch = GetContinuousRot(*pitch);
-  //        dyaw = GetContinuousRot(*yaw);
-  //        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
-  //        uint32_t seq = pkt->GetSeq();
-  //        Info("L1: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
-  //             pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z,
-  //             *roll, *pitch, *yaw);
-  //        wMtl1_comms_mutex.lock();
-  //        wMtl1_comms.setOrigin(pos);
-  //        wMtl1_comms.setRotation(rot);
-  //        wMtl1_received = true;
-  //        wMtl1_comms_mutex.unlock();
-  //      } else
-  //        Warn("L1: ERR");
-  //    }
-  //  });
+  std::thread hilRxWork([&]() {
+    auto pkt = pb->Create();
+    auto pd = pkt->GetPayloadBuffer();
+    int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
+            *pitch = roll + 1, *yaw = pitch + 1;
+    tf::Vector3 pos;
+    double droll, dpitch, dyaw;
+    tf::Quaternion rot;
+    while (true) {
+      hil_large >> pkt;
+      if (pkt->PacketIsOk()) {
+        // we have received the desired position from the buoy
+        pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
+        droll = GetContinuousRot(*roll);
+        dpitch = GetContinuousRot(*pitch);
+        dyaw = GetContinuousRot(*yaw);
+        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
+        uint32_t seq = pkt->GetSeq();
+        Info("L1: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
+             pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
+             *pitch, *yaw);
+        wMthil_comms_mutex.lock();
+        wMthil_comms.setOrigin(pos);
+        wMthil_comms.setRotation(rot);
+        wMthil_comms_received = true;
+        wMthil_comms_mutex.unlock();
+      } else
+        Warn("L1: ERR");
+    }
+  });
+  hilRxWork.detach();
 }
 
 CLASS_LOADER_REGISTER_CLASS(HILNetSimTracing, NetSimTracing)

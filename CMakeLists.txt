@@ -121,9 +121,7 @@ SET(${PROJECT_NAME}_netsim_scripts_CPP_FILES
 
 #add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_CPP_FILES})
 add_library(${PROJECT_NAME}_netsim_scripts SHARED ${${PROJECT_NAME}_netsim_scripts_CPP_FILES})
-
-#add_executable (hil_leader ${SRCPATH}main/hil_leader.cpp)
-#target_link_libraries(hil_leader ${catkin_LIBRARIES} ${MAVLINK_CPP_GIT} ${PROJECT_NAME} ${UMCI_GIT})
+target_link_libraries(${PROJECT_NAME}_netsim_scripts ${catkin_LIBRARIES} ${MAVLINK_CPP_GIT})
 
 install(TARGETS ${PROJECT_NAME}_netsim_scripts
         LIBRARY DESTINATION "lib"

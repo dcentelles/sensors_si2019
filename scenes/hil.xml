@@ -47,12 +47,12 @@
     <position>
       <x>-1.008775</x>
       <y>-0.432777 </y>
-      <z>-3.236887 </z>
+      <z>-53.236887 </z>
     </position> 
     <lookAt>
       <x>-0.417715</x>
       <y>-0.308857 </y>
-      <z>-4.033940 </z>
+      <z>-54.033940 </z>
     </lookAt>
 
   </camera>
@@ -71,7 +71,7 @@
   <netTracingScript>
     <className>tracingscript</className>
     <libPath>libsensors_si2019_netsim_scripts.so</libPath>
-    <logToFile>uwsimnet.log</logToFile>
+    <logToFile></logToFile>
   </netTracingScript>
 
   <!--
@@ -99,7 +99,7 @@
     <position>
       <x> 0 </x>
       <y> 1.5 </y>
-      <z> -5 </z>
+      <z> -55 </z>
     </position>
     <orientation>
       <r>-3.1415</r>
@@ -126,11 +126,12 @@
       <txChannelId>0</txChannelId>
       <rxChannelId>0</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>0</mac>
+      <mac>buoy_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+	      <name></name>
+	      <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>6900</bitrate>
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_buoy</tfId>
       <position>
@@ -154,17 +155,19 @@
       <!-- instrinsic delay in ms -->
       <intrinsicDelay>1</intrinsicDelay>
       <!-- range limits in meters -->
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
         <errorRateExpr>0.0000</errorRateExpr>
       </rateErrorModel>
       <txPacketBuilder>
-        <className>packetbuilder</className>
+	<className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
 
       <logLevel>warn</logLevel>
@@ -208,11 +211,13 @@
       <txChannelId>0</txChannelId>
       <rxChannelId>0</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>1</mac>
+      <mac>hil_ac_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+	      <name></name>
+	      <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>6900</bitrate>
+
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_hil_ac</tfId>
       <position>
@@ -234,7 +239,7 @@
         </scaleFactor>
       </mesh>
       <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
@@ -242,9 +247,11 @@
       </rateErrorModel>
       <txPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -254,11 +261,12 @@
       <txChannelId>1</txChannelId>
       <rxChannelId>1</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>2</mac>
+      <mac>hil_rf_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+	 <name></name>
+	 <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>1900</bitrate>
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_hil_rf</tfId>
       <position>
@@ -280,7 +288,7 @@
         </scaleFactor>
       </mesh>
       <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
@@ -288,9 +296,11 @@
       </rateErrorModel>
       <txPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
       <logLevel>info</logLevel>
       <disable>disablerf</disable>
@@ -305,7 +315,7 @@
     <position>
       <x> 0 </x>
       <y> -1.5 </y>
-      <z> -5 </z>
+      <z> -55 </z>
     </position>
     <orientation>
       <r>-3.1415</r>
@@ -317,11 +327,12 @@
       <txChannelId>echannel</txChannelId>
       <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>3</mac>
+      <mac>explorer1_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+	 <name></name>
+	 <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>ebitrate</bitrate>
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer1</tfId>
       <position>
@@ -343,7 +354,7 @@
         </scaleFactor>
       </mesh>
       <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
@@ -351,9 +362,11 @@
       </rateErrorModel>
       <txPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -366,7 +379,7 @@
     <position>
       <x> -1.5 </x>
       <y> -1.5 </y>
-      <z> -5 </z>
+      <z> -55 </z>
     </position>
     <orientation>
       <r>-3.1415</r>
@@ -378,11 +391,12 @@
       <txChannelId>echannel</txChannelId>
       <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>4</mac>
+      <mac>explorer2_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+      	 <name></name>
+	 <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>ebitrate</bitrate>
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer2</tfId>
       <position>
@@ -404,7 +418,7 @@
         </scaleFactor>
       </mesh>
       <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
@@ -412,9 +426,11 @@
       </rateErrorModel>
       <txPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
@@ -427,7 +443,7 @@
     <position>
       <x> -1.5 </x>
       <y> 0 </y>
-      <z> -5 </z>
+      <z> -55 </z>
     </position>
     <orientation>
       <r>-3.1415</r>
@@ -439,11 +455,12 @@
       <txChannelId>echannel</txChannelId>
       <rxChannelId>echannel</rxChannelId>
       <relativeTo>base_link</relativeTo>
-      <mac>5</mac>
+      <mac>explorer3_addr</mac>
       <macProtocol>
-        <name>macprotocol</name>
+	 <name></name>
+	 <maxBackoffSlots></maxBackoffSlots>
       </macProtocol>
-      <bitrate>ebitrate</bitrate>
+      <bitrate>1800</bitrate>
       <txFifoSize>500</txFifoSize>
       <tfId>comms_explorer3</tfId>
       <position>
@@ -465,7 +482,7 @@
         </scaleFactor>
       </mesh>
       <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
+      <maxDistance></maxDistance>
       <minDistance>0</minDistance>
       <rateErrorModel>
         <errorUnit>bit</errorUnit>
@@ -473,324 +490,15 @@
       </rateErrorModel>
       <txPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </txPacketBuilder>
       <rxPacketBuilder>
         <className>packetbuilder</className>
+        builderlibpath
       </rxPacketBuilder>
       <logLevel>info</logLevel>
     </CustomCommsDevice>
   </vehicle>
-
-
-
-
-<!-- TEAM 2 -->
-
-  <!-- leader 1 -->
-  <vehicle>
-    <name>leader1</name>
-    <file>data/scenes/bluerov2_ghost.urdf</file>
-    <position>
-      <x> 0 </x>
-      <y> -10 </y>
-      <z> -5 </z>
-    </position>
-    <orientation>
-      <r>-3.1415</r>
-      <p>0</p>
-      <y>0</y>
-    </orientation>
-
-    <CustomCommsDevice>
-      <dccommsId>comms_leader1_ac</dccommsId>
-      <txChannelId>0</txChannelId>
-      <rxChannelId>0</rxChannelId>
-      <relativeTo>base_link</relativeTo>
-      <mac>6</mac>
-      <macProtocol>
-        <name>macprotocol</name>
-      </macProtocol>
-      <bitrate>6900</bitrate>
-      <txFifoSize>500</txFifoSize>
-      <tfId>comms_leader1_ac</tfId>
-      <position>
-        <x>-0.15</x>
-        <y>0.14</y>
-        <z>-0.03</z>
-      </position>
-      <orientation>
-        <r>-3.1415</r>
-        <p>0</p>
-        <y>0</y>
-      </orientation>        
-      <mesh>
-        <path>data/objects/s2cr.3ds</path>
-        <scaleFactor>
-          <x>0.0005</x>
-          <y>0.0005</y>
-          <z>0.0005</z>
-        </scaleFactor>
-      </mesh>
-      <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
-      <minDistance>0</minDistance>
-      <rateErrorModel>
-        <errorUnit>bit</errorUnit>
-        <errorRateExpr>0.0</errorRateExpr>
-      </rateErrorModel>
-      <txPacketBuilder>
-        <className>packetbuilder</className>
-      </txPacketBuilder>
-      <rxPacketBuilder>
-        <className>packetbuilder</className>
-      </rxPacketBuilder>
-      <logLevel>info</logLevel>
-    </CustomCommsDevice>
-
-    <CustomCommsDevice>
-      <dccommsId>comms_leader1_rf</dccommsId>
-      <txChannelId>1</txChannelId>
-      <rxChannelId>1</rxChannelId>
-      <relativeTo>base_link</relativeTo>
-      <mac>7</mac>
-      <macProtocol>
-        <name>macprotocol</name>
-      </macProtocol>
-      <bitrate>1900</bitrate>
-      <txFifoSize>500</txFifoSize>
-      <tfId>comms_leader1_rf</tfId>
-      <position>
-        <x>-0.15</x>
-        <y>0.14</y>
-        <z>-0.03</z>
-      </position>
-      <orientation>
-        <r>-3.1415</r>
-        <p>0</p>
-        <y>0</y>
-      </orientation>        
-      <mesh>
-        <path>data/objects/s2cr.3ds</path>
-        <scaleFactor>
-          <x>0.0005</x>
-          <y>0.0005</y>
-          <z>0.0005</z>
-        </scaleFactor>
-      </mesh>
-      <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
-      <minDistance>0</minDistance>
-      <rateErrorModel>
-        <errorUnit>bit</errorUnit>
-        <errorRateExpr>0.0</errorRateExpr>
-      </rateErrorModel>
-      <txPacketBuilder>
-        <className>packetbuilder</className>
-      </txPacketBuilder>
-      <rxPacketBuilder>
-        <className>packetbuilder</className>
-      </rxPacketBuilder>
-      <logLevel>info</logLevel>
-      <disable>disablerf</disable>
-    </CustomCommsDevice>
-
-  </vehicle>
-
-   <!-- explorer 1 -->
-  <vehicle>
-    <name>explorer1_2</name>
-    <file>data/scenes/bluerov2.urdf</file>
-    <position>
-      <x> 0 </x>
-      <y> -1.5 </y>
-      <z> -5 </z>
-    </position>
-    <orientation>
-      <r>-3.1415</r>
-      <p>0</p>
-      <y>0</y>
-    </orientation>
-    <CustomCommsDevice>
-      <dccommsId>comms_explorer1_2</dccommsId>
-      <txChannelId>echannel</txChannelId>
-      <rxChannelId>echannel</rxChannelId>
-      <relativeTo>base_link</relativeTo>
-      <mac>8</mac>
-      <macProtocol>
-        <name>macprotocol</name>
-      </macProtocol>
-      <bitrate>ebitrate</bitrate>
-      <txFifoSize>500</txFifoSize>
-      <tfId>comms_explorer1_2</tfId>
-      <position>
-        <x>-0.15</x>
-        <y>0.14</y>
-        <z>-0.03</z>
-      </position>
-      <orientation>
-        <r>0</r>
-        <p>3.14</p>
-        <y>0</y>
-      </orientation>        
-      <mesh>
-        <path>data/objects/s2cr.3ds</path>
-        <scaleFactor>
-          <x>0.0005</x>
-          <y>0.0005</y>
-          <z>0.0005</z>
-        </scaleFactor>
-      </mesh>
-      <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
-      <minDistance>0</minDistance>
-      <rateErrorModel>
-        <errorUnit>bit</errorUnit>
-        <errorRateExpr>0.0</errorRateExpr>
-      </rateErrorModel>
-      <txPacketBuilder>
-        <className>packetbuilder</className>
-      </txPacketBuilder>
-      <rxPacketBuilder>
-        <className>packetbuilder</className>
-      </rxPacketBuilder>
-      <logLevel>info</logLevel>
-    </CustomCommsDevice>
-  </vehicle>
-
-  <!-- explorer 2 -->
-  <vehicle>
-    <name>explorer2_2</name>
-    <file>data/scenes/bluerov2.urdf</file>
-    <position>
-      <x> -1.5 </x>
-      <y> -1.5 </y>
-      <z> -5 </z>
-    </position>
-    <orientation>
-      <r>-3.1415</r>
-      <p>0</p>
-      <y>0</y>
-    </orientation>
-    <CustomCommsDevice>
-      <dccommsId>comms_explorer2_2</dccommsId>
-      <txChannelId>echannel</txChannelId>
-      <rxChannelId>echannel</rxChannelId>
-      <relativeTo>base_link</relativeTo>
-      <mac>9</mac>
-      <macProtocol>
-        <name>macprotocol</name>
-      </macProtocol>
-      <bitrate>ebitrate</bitrate>
-      <txFifoSize>500</txFifoSize>
-      <tfId>comms_explorer2_2</tfId>
-      <position>
-        <x>-0.15</x>
-        <y>0.14</y>
-        <z>-0.03</z>
-      </position>
-      <orientation>
-        <r>0</r>
-        <p>3.14</p>
-        <y>0</y>
-      </orientation>        
-      <mesh>
-        <path>data/objects/s2cr.3ds</path>
-        <scaleFactor>
-          <x>0.0005</x>
-          <y>0.0005</y>
-          <z>0.0005</z>
-        </scaleFactor>
-      </mesh>
-      <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
-      <minDistance>0</minDistance>
-      <rateErrorModel>
-        <errorUnit>bit</errorUnit>
-        <errorRateExpr>0.0</errorRateExpr>
-      </rateErrorModel>
-      <txPacketBuilder>
-        <className>packetbuilder</className>
-      </txPacketBuilder>
-      <rxPacketBuilder>
-        <className>packetbuilder</className>
-      </rxPacketBuilder>
-      <logLevel>info</logLevel>
-    </CustomCommsDevice>
-  </vehicle>
-
-   <!-- explorer 3 -->
-  <vehicle>
-    <name>explorer3_2</name>
-    <file>data/scenes/bluerov2.urdf</file>
-    <position>
-      <x> -1.5 </x>
-      <y> 0 </y>
-      <z> -5 </z>
-    </position>
-    <orientation>
-      <r>-3.1415</r>
-      <p>0</p>
-      <y>0</y>
-    </orientation>
-    <CustomCommsDevice>
-      <dccommsId>comms_explorer3_2</dccommsId>
-      <txChannelId>echannel</txChannelId>
-      <rxChannelId>echannel</rxChannelId>
-      <relativeTo>base_link</relativeTo>
-      <mac>10</mac>
-      <macProtocol>
-        <name>macprotocol</name>
-      </macProtocol>
-      <bitrate>ebitrate</bitrate>
-      <txFifoSize>500</txFifoSize>
-      <tfId>comms_explorer3_2</tfId>
-      <position>
-        <x>-0.15</x>
-        <y>0.14</y>
-        <z>-0.03</z>
-      </position>
-      <orientation>
-        <r>0</r>
-        <p>3.14</p>
-        <y>0</y>
-      </orientation>        
-      <mesh>
-        <path>data/objects/s2cr.3ds</path>
-        <scaleFactor>
-          <x>0.0005</x>
-          <y>0.0005</y>
-          <z>0.0005</z>
-        </scaleFactor>
-      </mesh>
-      <intrinsicDelay>1</intrinsicDelay>
-      <maxDistance>100</maxDistance>
-      <minDistance>0</minDistance>
-      <rateErrorModel>
-        <errorUnit>bit</errorUnit>
-        <errorRateExpr>0.0</errorRateExpr>
-      </rateErrorModel>
-      <txPacketBuilder>
-        <className>packetbuilder</className>
-      </txPacketBuilder>
-      <rxPacketBuilder>
-        <className>packetbuilder</className>
-      </rxPacketBuilder>
-      <logLevel>info</logLevel>
-    </CustomCommsDevice>
-  </vehicle>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   <object>
@@ -799,7 +507,7 @@
     <position>
       <x> 0.05</x>
       <y> 0.36 </y>
-      <z> -5.5 </z>
+      <z> -55.5 </z>
     </position>
     <orientation>
       <r>0</r>
@@ -819,7 +527,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.50 </y>
-      <z> -4.515 </z>
+      <z> -54.515 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -834,7 +542,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.50 </y>
-      <z> -4.7025 </z>
+      <z> -54.7025 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -848,7 +556,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.50 </y>
-      <z> -4.89 </z>
+      <z> -54.89 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -862,7 +570,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.50 </y>
-      <z> -5.0775 </z>
+      <z> -55.0775 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -877,7 +585,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.50 </y>
-      <z> -5.265 </z>
+      <z> -55.265 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -897,7 +605,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.20 </y>
-      <z> -4.515 </z>
+      <z> -54.515 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -912,7 +620,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.20 </y>
-      <z> -4.7025 </z>
+      <z> -54.7025 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -927,7 +635,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.20 </y>
-      <z> -4.89 </z>
+      <z> -54.89 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -942,7 +650,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.20 </y>
-      <z> -5.0775 </z>
+      <z> -55.0775 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -957,7 +665,7 @@
     <position>
       <x> 1.03</x>
       <y> 0.20 </y>
-      <z> -5.265 </z>
+      <z> -55.265 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -977,7 +685,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.10 </y>
-      <z> -4.515 </z>
+      <z> -54.515 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -991,7 +699,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.10 </y>
-      <z> -4.7025 </z>
+      <z> -54.7025 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1005,7 +713,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.10 </y>
-      <z> -4.89 </z>
+      <z> -54.89 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1019,7 +727,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.10 </y>
-      <z> -5.0775 </z>
+      <z> -55.0775 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1033,7 +741,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.10 </y>
-      <z> -5.265 </z>
+      <z> -55.265 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1051,7 +759,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.40 </y>
-      <z> -4.515 </z>
+      <z> -54.515 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1066,7 +774,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.40 </y>
-      <z> -4.7025 </z>
+      <z> -54.7025 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1081,7 +789,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.40 </y>
-      <z> -4.89 </z>
+      <z> -54.89 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1096,7 +804,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.40 </y>
-      <z> -5.0775 </z>
+      <z> -55.0775 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1111,7 +819,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.40 </y>
-      <z> -5.265 </z>
+      <z> -55.265 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1130,7 +838,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.70 </y>
-      <z> -4.515 </z>
+      <z> -54.515 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1145,7 +853,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.70 </y>
-      <z> -4.7025 </z>
+      <z> -54.7025 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1160,7 +868,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.70 </y>
-      <z> -4.89 </z>
+      <z> -54.89 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1175,7 +883,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.70 </y>
-      <z> -5.0775 </z>
+      <z> -55.0775 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1190,7 +898,7 @@
     <position>
       <x> 1.03</x>
       <y> -0.70 </y>
-      <z> -5.265 </z>
+      <z> -55.265 </z>
     </position>
     <orientation>
       <r>1.57</r>
@@ -1273,18 +981,6 @@
     </CustomCommsDeviceROS>
 
     <CustomCommsDeviceROS>
-      <name>comms_leader1_ac</name>
-      <topic>/uwsim/leader1/comms_ac</topic>
-      <rate>5</rate>
-    </CustomCommsDeviceROS>
-   
-    <CustomCommsDeviceROS>
-      <name>comms_leader1_rf</name>
-      <topic>/uwsim/leader1/comms_rf</topic>
-      <rate>5</rate>
-    </CustomCommsDeviceROS>
-
-    <CustomCommsDeviceROS>
       <name>comms_explorer1</name>
       <topic> /uwsim/explorer1/comms</topic>
       <rate>5</rate>
@@ -1301,25 +997,6 @@
       <topic> /uwsim/explorer3/comms</topic>
       <rate>5</rate>
     </CustomCommsDeviceROS>
-
-    <CustomCommsDeviceROS>
-      <name>comms_explorer1_2</name>
-      <topic> /uwsim/explorer1_2/comms</topic>
-      <rate>5</rate>
-    </CustomCommsDeviceROS>
-    
-    <CustomCommsDeviceROS>
-      <name>comms_explorer2_2</name>
-      <topic> /uwsim/explorer2_2/comms</topic>
-      <rate>5</rate>
-    </CustomCommsDeviceROS>
-    
-    <CustomCommsDeviceROS>
-      <name>comms_explorer3_2</name>
-      <topic> /uwsim/explorer3_2/comms</topic>
-      <rate>5</rate>
-    </CustomCommsDeviceROS>
-
   </rosInterfaces>
 
 </UWSimScene>

@@ -1,10 +1,13 @@
-#include <dccomms_packets/VariableLengthPacket.h>
+#include <dccomms_packets/VariableLength2BPacket.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <umci/DcMac.h>
 #include <underwater_sensor_msgs/LedLight.h>
 #include <uwsim/NetSim.h>
+#include <wireless_ardusub/JoyController.h>
+#include <wireless_ardusub/OperatorController.h>
+#include <tf/transform_broadcaster.h>
 
 namespace sensors_si2019 {
 
@@ -12,6 +15,7 @@ using namespace uwsim;
 using namespace dccomms_packets;
 using namespace dccomms;
 using namespace umci;
+using namespace wireless_ardusub;
 
 class HILNetSimTracing : public NetSimTracing {
 public:
@@ -65,15 +69,17 @@ public:
                                                     const bool &rf);
   CommsDeviceServicePtr ConfigureDcMacLayerOnBuoy(const int &addr = 0);
 
-  dccomms::Ptr<VariableLengthPacketBuilder> pb;
-  dccomms::CommsDeviceServicePtr buoy, hil, hil_rf, hil_ac, e1, e2, e3;
+  dccomms::Ptr<VariableLength2BPacketBuilder> pb;
+  dccomms::CommsDeviceServicePtr buoy, hil_large, hil_short, hil_rf, hil_ac, e1,
+      e2, e3;
 
-  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMhil_comms_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3;
-  tf::StampedTransform hilMte1, hilMte2, hilMte3, wMe1, wMe2, wMe3;
+  std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMhil_mutex, wMhil_comms_mutex,
+      wMthil_comms_mutex;
+  tf::Transform e1Mte1, e2Mte2, e3Mte3, wMthil_comms;
+  tf::StampedTransform hilMte1, hilMte2, hilMte3, wMhil, wMe1, wMe2, wMe3;
 
   tf::Transform wMhil_comms;
-  bool wMhil_comms_received = false;
+  bool wMhil_comms_received = false, wMthil_comms_received = false;
   void explorerTxWork(int src, int dst, CommsDeviceServicePtr &stream,
                       std::mutex &mutex, const tf::Transform &wMeRef);
   void explorerRxWork(int src, CommsDeviceServicePtr &stream, std::mutex &mutex,
@@ -81,6 +87,9 @@ public:
 
   int16_t buoy_addr, hil_ac_addr, e1_addr, e2_addr, e3_addr, hil_rf_addr,
       t0_dst;
+  OperatorController::Params params;
+  dccomms::Ptr<OperatorController> op;
+  bool initPosReached = false;
 
 protected:
   bool use_rf_channels;
