@@ -383,36 +383,40 @@ void HILNetSimTracing::DoRun() {
 
   op->SetReferenceTfName("local_origin_ned");
 
-  op->ControlState.mode = FLY_MODE_R::MANUAL;
-  op->ControlState.arm = false;
+  op->ControlState.mode = FLY_MODE_R::GUIDED;
+  op->ControlState.arm = true;
   op->ControlState.x = 0;
   op->ControlState.y = 0;
   op->ControlState.z = 0;
   op->ControlState.r = 0;
 
+  op->SetTfMode(false);
   op->Start();
 
   std::thread reachInitPos([&]() {
     tf::TransformBroadcaster sender;
     tf::TransformListener listener;
-    tf::StampedTransform hilMinit;
-    op->SetRobotTfName("hil");
-    op->SetDesiredPosTfName("hil_init");
+    tf::Transform wMinit, hilMinit;
+
+    tf::Quaternion rotation;
+    rotation.setRPY(0, 0, 0);
+    wMinit.setOrigin(tf::Vector3(0, 0, 0.85));
+    wMinit.setRotation(rotation);
 
     tf::Vector3 origin(0, 0, 0);
     while (1) {
       try {
-        listener.lookupTransform("hil", "hil_init", ros::Time(0), hilMinit);
-        if (hilMinit.getOrigin().distance(origin) > 0.2) {
-          op->ControlState.mode = FLY_MODE_R::GUIDED;
-          op->ControlState.arm = true;
-        } else {
-          initPosReached = true;
-          op->SetDesiredPosTfName("hil_target");
-          op->ResetPID();
-          break;
-        }
-
+        if (wMhil_updated) {
+          op->SetnedMtarget(wMinit);
+          op->SetnedMerov(wMhil);
+          hilMinit = wMhil.inverse() * wMinit;
+          if (hilMinit.getOrigin().distance(origin) <= 0.2) {
+            initPosReached = true;
+            op->ResetPID();
+            break;
+          }
+        } else
+          std::this_thread::sleep_for(chrono::milliseconds(100));
       } catch (tf::TransformException &ex) {
         op->ResetPID();
         Warn("TF: {}", ex.what());
@@ -427,6 +431,7 @@ void HILNetSimTracing::DoRun() {
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
     std::vector<geometry_msgs::TransformStamped> static_transforms;
     geometry_msgs::TransformStamped static_transformStamped;
+    tf::TransformBroadcaster broadcaster;
     tf::TransformListener listener;
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
@@ -448,6 +453,7 @@ void HILNetSimTracing::DoRun() {
         std::unique_lock<std::mutex> wMhil_lock(wMhil_mutex);
         listener.lookupTransform("local_origin_ned", "hil", ros::Time(0),
                                  wMhil);
+        wMhil_updated = true;
         wMhil_lock.unlock();
 
         std::unique_lock<std::mutex> wMe1_lock(wMe1_mutex);
@@ -464,6 +470,20 @@ void HILNetSimTracing::DoRun() {
         listener.lookupTransform("local_origin_ned", "explorer3", ros::Time(0),
                                  wMe3);
         wMe3_lock.unlock();
+
+        if (initPosReached && wMthil_comms_received && wMhil_comms_received) {
+
+          wMthil_comms_mutex.lock();
+          wMhil_mutex.lock();
+          op->SetnedMtarget(wMthil_comms);
+          op->SetnedMerov(wMhil);
+          wMhil_mutex.unlock();
+          wMthil_comms_mutex.unlock();
+          // For debugging
+          broadcaster.sendTransform(
+              tf::StampedTransform(wMthil_comms, ros::Time::now(),
+                                   "local_origin_ned", "hil_target"));
+        }
 
       } catch (tf::TransformException &ex) {
         op->ResetPID();
@@ -499,19 +519,6 @@ void HILNetSimTracing::DoRun() {
       if (!wMhil_comms_received || !wMthil_comms_received) {
         std::this_thread::sleep_for(chrono::seconds(1));
         continue;
-      }
-      if (wMthil_comms_received) {
-        op->ControlState.mode = FLY_MODE_R::GUIDED;
-        try {
-          broadcaster.sendTransform(
-              tf::StampedTransform(wMthil_comms, ros::Time::now(),
-                                   "local_origin_ned", "hil_target"));
-
-        } catch (tf::TransformException &ex) {
-          op->ResetPID();
-          Warn("TF: {}", ex.what());
-          std::this_thread::sleep_for(chrono::milliseconds(100));
-        }
       }
 
       // Compute target transform from every slave in team 1 (input: hil

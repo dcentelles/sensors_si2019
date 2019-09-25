@@ -90,6 +90,7 @@ public:
   OperatorController::Params params;
   dccomms::Ptr<OperatorController> op;
   bool initPosReached = false;
+  bool wMhil_updated = false;
 
 protected:
   bool use_rf_channels;
