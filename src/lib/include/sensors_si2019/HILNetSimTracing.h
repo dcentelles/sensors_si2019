@@ -2,12 +2,12 @@
 #include <nav_msgs/Odometry.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
+#include <tf/transform_broadcaster.h>
 #include <umci/DcMac.h>
 #include <underwater_sensor_msgs/LedLight.h>
 #include <uwsim/NetSim.h>
 #include <wireless_ardusub/JoyController.h>
 #include <wireless_ardusub/OperatorController.h>
-#include <tf/transform_broadcaster.h>
 
 namespace sensors_si2019 {
 
@@ -74,8 +74,8 @@ public:
       e2, e3;
 
   std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMhil_mutex, wMhil_comms_mutex,
-      wMthil_comms_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3, wMthil_comms;
+      wMthil_comms_mutex, wMthil_mutex;
+  tf::Transform e1Mte1, e2Mte2, e3Mte3, wMthil_comms, wMthil;
   tf::StampedTransform hilMte1, hilMte2, hilMte3, wMhil, wMe1, wMe2, wMe3;
 
   tf::Transform wMhil_comms;
@@ -91,14 +91,19 @@ public:
   dccomms::Ptr<OperatorController> op;
   bool initPosReached = false;
   bool wMhil_updated = false;
+  bool wMthil_updated = true;
+
+  void ArmHIL();
 
 protected:
   bool use_rf_channels;
   bool use_umci_mac;
   uint32_t buoyPacketSize = 50;
+  uint32_t hilPacketSize = 50;
   uint32_t explorersPacketSize = 600;
   uint32_t explorersDataRate = 300;
   uint32_t buoyDataRate = 100;
+  uint32_t hilDataRate = 100;
   uint64_t desiredPositionUpdateIntervalMillis = 15000;
 
   double ac_maxDistance = 100;
@@ -107,7 +112,7 @@ protected:
   uint32_t ac_bitrate = 1800;
   uint32_t rf_nnodes = 4;
   uint32_t ac_nnodes = 5;
-  cpplogging::LogLevel dcmacLogLevel = info;
+  cpplogging::LogLevel dcmacLogLevel = off;
 };
 
 class RF_HILNetSimTracing : public HILNetSimTracing {

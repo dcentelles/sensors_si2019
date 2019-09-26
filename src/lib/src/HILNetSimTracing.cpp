@@ -56,18 +56,18 @@ void HILNetSimTracing::PacketDropsUpdated(std::string path, uint32_t oldValue,
 
 void HILNetSimTracing::TxFifoUpdated(std::string path, uint32_t oldValue,
                                      uint32_t newValue) {
-  // Info("[{}] TXFIFO {}", path, newValue);
+  Info("[{}] TXFIFO {}", path, newValue);
 }
 
 void HILNetSimTracing::MacPacketDropsUpdated(std::string path,
                                              uint32_t oldValue,
                                              uint32_t newValue) {
-  // Info("[{}] MAC PKTDROPS {}", path, newValue);
+  Info("[{}] MAC PKTDROPS {}", path, newValue);
 }
 
 void HILNetSimTracing::MacTxFifoUpdated(std::string path, uint32_t oldValue,
                                         uint32_t newValue) {
-  // Info("[{}] MAC TXFIFO {}", path, newValue);
+  Info("[{}] MAC TXFIFO {}", path, newValue);
 }
 
 void HILNetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
@@ -76,23 +76,23 @@ void HILNetSimTracing::PacketError(std::string path, ROSCommsDevicePtr dev,
 
   NetsimHeader header;
   pkt->PeekHeader(header);
-  //  if (propErr) {
-  //    if (!colErr) {
-  //      Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-  //           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-  //           header.GetPacketSize());
-  //    } else {
+  if (propErr) {
+    if (!colErr) {
+      Warn("[{}] PERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+           header.GetPacketSize());
+    } else {
 
-  //      Warn("[{}] MERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-  //           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-  //           header.GetPacketSize());
-  //    }
-  //  } else {
+      Warn("[{}] MERR -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+           dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+           header.GetPacketSize());
+    }
+  } else {
 
-  //    Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-  //         dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-  //         header.GetPacketSize());
-  //  }
+    Warn("[{}] COL -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+         dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+         header.GetPacketSize());
+  }
 }
 
 void HILNetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
@@ -388,60 +388,102 @@ HILNetSimTracing::ConfigureDcMacLayerOnLeader(const int &addr, const bool &rf) {
   return dcmac;
 }
 
+void HILNetSimTracing::ArmHIL() {
+  op->ControlState.mode = FLY_MODE_R::GUIDED;
+  op->ControlState.arm = true;
+}
+
 void HILNetSimTracing::DoRun() {
 
   op->SetReferenceTfName("local_origin_ned");
-
-  op->ControlState.mode = FLY_MODE_R::GUIDED;
-  op->ControlState.arm = true;
-  op->ControlState.x = 0;
-  op->ControlState.y = 0;
-  op->ControlState.z = 0;
-  op->ControlState.r = 0;
-
   op->SetTfMode(false);
   op->SetLogLevel(cpplogging::warn);
   op->Start();
+  ArmHIL();
 
-  std::thread reachInitPos([&]() {
-    tf::TransformBroadcaster sender;
-    tf::TransformListener listener;
-    tf::Transform wMinit, hilMinit;
+  buoy_addr = 0;
 
-    tf::Quaternion rotation;
-    rotation.setRPY(0, 0, 0);
-    wMinit.setOrigin(tf::Vector3(0, 0, 0.85));
-    wMinit.setRotation(rotation);
+  if (use_umci_mac) {
 
-    tf::Vector3 origin(0, 0, 0);
-    while (1) {
-      try {
-        if (wMhil_updated) {
-          op->SetnedMtarget(wMinit);
-          op->SetnedMerov(wMhil);
-          hilMinit = wMhil.inverse() * wMinit;
-          if (hilMinit.getOrigin().distance(origin) <= 0.2) {
-            initPosReached = true;
-            op->ResetPID();
-            break;
-          }
-        } else
-          std::this_thread::sleep_for(chrono::milliseconds(100));
-      } catch (tf::TransformException &ex) {
-        op->ResetPID();
-        Warn("TF: {}", ex.what());
-        std::this_thread::sleep_for(chrono::milliseconds(100));
-        continue;
-      }
+    // Si usamos una capa mac externa a UWSim-NET podemos repetir las mac. No
+    // obstante, en el xml estas mac han de ser diferente para no producir
+    // error.
+
+    if (use_rf_channels) {
+      hil_ac_addr = 1;
+      hil_rf_addr = 0;
+      e1_addr = 1;
+      e2_addr = 2;
+      e3_addr = 3;
+
+      t0_dst = hil_rf_addr;
+
+    } else {
+      hil_ac_addr = 1;
+      e1_addr = 2;
+      e2_addr = 3;
+      e3_addr = 4;
+
+      t0_dst = buoy_addr;
     }
-  });
-  reachInitPos.detach();
+
+    buoy = ConfigureDcMacLayerOnBuoy();
+    hil_ac = ConfigureDcMacLayerOnLeader(hil_ac_addr, false);
+    e1 = ConfigureDcMacLayerOnExplorer(e1_addr);
+    e2 = ConfigureDcMacLayerOnExplorer(e2_addr);
+    e3 = ConfigureDcMacLayerOnExplorer(e3_addr);
+
+  } else {
+
+    // Si usamos una capa mac implementada en UWSim-NET las mac han de ser
+    // diferentes para cada dispositivo. TODO: permitir repeticion de macs en
+    // UWSim-NET
+    hil_ac_addr = 1;
+    hil_rf_addr = 2;
+    e1_addr = 3;
+    e2_addr = 4;
+    e3_addr = 5;
+
+    if (use_rf_channels) {
+      t0_dst = hil_rf_addr;
+
+      hil_rf = dccomms::CreateObject<CommsDeviceService>(pb);
+
+    } else {
+      t0_dst = buoy_addr;
+    }
+
+    buoy = dccomms::CreateObject<CommsDeviceService>(pb);
+    hil_ac = dccomms::CreateObject<CommsDeviceService>(pb);
+    e1 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e2 = dccomms::CreateObject<CommsDeviceService>(pb);
+    e3 = dccomms::CreateObject<CommsDeviceService>(pb);
+  }
+
+  if (use_rf_channels) {
+    hil_rf->SetCommsDeviceId("comms_hil_rf");
+    hil_rf->Start();
+  }
+
+  buoy->SetCommsDeviceId("comms_buoy");
+  buoy->Start();
+  e1->SetCommsDeviceId("comms_explorer1");
+  e1->Start();
+  e2->SetCommsDeviceId("comms_explorer2");
+  e2->Start();
+  e3->SetCommsDeviceId("comms_explorer3");
+  e3->Start();
+  std::this_thread::sleep_for(chrono::seconds(2));
+
+  hil_ac->SetCommsDeviceId("comms_hil_ac");
+  hil_ac->Start();
+
+  std::this_thread::sleep_for(chrono::seconds(2));
 
   std::thread gpsWork([&]() {
     tf2_ros::StaticTransformBroadcaster static_broadcaster;
     std::vector<geometry_msgs::TransformStamped> static_transforms;
     geometry_msgs::TransformStamped static_transformStamped;
-    tf::TransformBroadcaster broadcaster;
     tf::TransformListener listener;
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
@@ -480,20 +522,7 @@ void HILNetSimTracing::DoRun() {
         listener.lookupTransform("local_origin_ned", "explorer3", ros::Time(0),
                                  wMe3);
         wMe3_lock.unlock();
-
-        if (initPosReached && wMthil_comms_received && wMhil_comms_received) {
-
-          wMthil_comms_mutex.lock();
-          wMhil_mutex.lock();
-          op->SetnedMtarget(wMthil_comms);
-          op->SetnedMerov(wMhil);
-          wMhil_mutex.unlock();
-          wMthil_comms_mutex.unlock();
-          // For debugging
-          broadcaster.sendTransform(
-              tf::StampedTransform(wMthil_comms, ros::Time::now(),
-                                   "local_origin_ned", "hil_target"));
-        }
+        std::this_thread::sleep_for(chrono::milliseconds(25));
 
       } catch (tf::TransformException &ex) {
         op->ResetPID();
@@ -504,6 +533,64 @@ void HILNetSimTracing::DoRun() {
     }
   });
   gpsWork.detach();
+
+  std::this_thread::sleep_for(chrono::seconds(5));
+
+  std::thread hilWorker([&]() {
+    tf::TransformBroadcaster sender;
+    tf::TransformListener listener;
+    tf::Transform wMinit, hilMinit;
+    tf::TransformBroadcaster broadcaster;
+
+    tf::Quaternion rotation;
+    rotation.setRPY(0, 0, 0);
+    wMinit.setOrigin(tf::Vector3(0, 0, 0.85));
+    wMinit.setRotation(rotation);
+
+    tf::Vector3 origin(0, 0, 0);
+    while (!wMhil_updated) {
+      std::this_thread::sleep_for(chrono::seconds(1));
+    }
+    while (1) {
+      try {
+        std::unique_lock<std::mutex> wMhil_lock(wMhil_mutex);
+        std::unique_lock<std::mutex> wMthil_lock(wMthil_mutex);
+        std::unique_lock<std::mutex> wMthil_comms_lock(wMthil_comms_mutex);
+        op->SetnedMerov(wMhil);
+        if (initPosReached) {
+          if (wMthil_updated) {
+            broadcaster.sendTransform(tf::StampedTransform(
+                wMthil, ros::Time::now(), "local_origin_ned", "hil_target"));
+          }
+
+          if (wMthil_comms_received) {
+            op->SetnedMtarget(wMthil_comms);
+            broadcaster.sendTransform(
+                tf::StampedTransform(wMthil_comms, ros::Time::now(),
+                                     "local_origin_ned", "hil_target_comms"));
+          } else {
+            op->SetnedMtarget(wMinit);
+          }
+        } else {
+          op->SetnedMtarget(wMinit);
+          hilMinit = wMhil.inverse() * wMinit;
+          if (hilMinit.getOrigin().distance(origin) <= 0.2) {
+            initPosReached = true;
+          }
+        }
+        wMhil_lock.unlock();
+        wMthil_lock.unlock();
+        wMthil_comms_lock.unlock();
+        std::this_thread::sleep_for(chrono::milliseconds(10));
+      } catch (tf::TransformException &ex) {
+        op->ResetPID();
+        Warn("TF: {}", ex.what());
+        std::this_thread::sleep_for(chrono::milliseconds(100));
+        continue;
+      }
+    }
+  });
+  hilWorker.detach();
 
   std::thread explorersWork([&]() {
     tf::TransformListener listener;
@@ -526,7 +613,7 @@ void HILNetSimTracing::DoRun() {
 
     ros::Rate rate(10);
     while (1) {
-      if (!wMhil_comms_received || !wMthil_comms_received) {
+      if (!wMhil_comms_received) {
         std::this_thread::sleep_for(chrono::seconds(1));
         continue;
       }
@@ -617,82 +704,6 @@ void HILNetSimTracing::DoRun() {
   });
   explorersWork.detach();
 
-  buoy_addr = 0;
-
-  if (use_umci_mac) {
-
-    // Si usamos una capa mac externa a UWSim-NET podemos repetir las mac. No
-    // obstante, en el xml estas mac han de ser diferente para no producir
-    // error.
-
-    if (use_rf_channels) {
-      hil_ac_addr = 1;
-      hil_rf_addr = 0;
-      e1_addr = 1;
-      e2_addr = 2;
-      e3_addr = 3;
-
-      t0_dst = hil_rf_addr;
-
-    } else {
-      hil_ac_addr = 1;
-      e1_addr = 2;
-      e2_addr = 3;
-      e3_addr = 4;
-
-      t0_dst = buoy_addr;
-    }
-
-    buoy = ConfigureDcMacLayerOnBuoy();
-    hil_ac = ConfigureDcMacLayerOnLeader(hil_ac_addr, false);
-    e1 = ConfigureDcMacLayerOnExplorer(e1_addr);
-    e2 = ConfigureDcMacLayerOnExplorer(e2_addr);
-    e3 = ConfigureDcMacLayerOnExplorer(e3_addr);
-
-  } else {
-
-    // Si usamos una capa mac implementada en UWSim-NET las mac han de ser
-    // diferentes para cada dispositivo. TODO: permitir repeticion de macs en
-    // UWSim-NET
-    hil_ac_addr = 1;
-    hil_rf_addr = 2;
-    e1_addr = 3;
-    e2_addr = 4;
-    e3_addr = 5;
-
-    if (use_rf_channels) {
-      t0_dst = hil_rf_addr;
-
-      hil_rf = dccomms::CreateObject<CommsDeviceService>(pb);
-
-    } else {
-      t0_dst = buoy_addr;
-    }
-
-    buoy = dccomms::CreateObject<CommsDeviceService>(pb);
-    hil_ac = dccomms::CreateObject<CommsDeviceService>(pb);
-    e1 = dccomms::CreateObject<CommsDeviceService>(pb);
-    e2 = dccomms::CreateObject<CommsDeviceService>(pb);
-    e3 = dccomms::CreateObject<CommsDeviceService>(pb);
-  }
-
-  if (use_rf_channels) {
-    hil_rf->SetCommsDeviceId("comms_hil_rf");
-    hil_rf->Start();
-  }
-
-  hil_ac->SetCommsDeviceId("comms_hil_ac");
-  hil_ac->Start();
-
-  buoy->SetCommsDeviceId("comms_buoy");
-  buoy->Start();
-  e1->SetCommsDeviceId("comms_explorer1");
-  e1->Start();
-  e2->SetCommsDeviceId("comms_explorer2");
-  e2->Start();
-  e3->SetCommsDeviceId("comms_explorer3");
-  e3->Start();
-
   std::thread buoyRxWork([&]() {
     auto pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
     auto pkt = pb->Create();
@@ -728,6 +739,7 @@ void HILNetSimTracing::DoRun() {
   });
 
   std::thread buoyTxWork([&]() {
+    tf::TransformBroadcaster broadcaster;
     // Create TEAM 1 leader Waypoints
     std::vector<std::vector<double>> hilTargets;
     hilTargets.push_back(std::vector<double>{0.09, 0.42, 0.75, 360});
@@ -753,6 +765,7 @@ void HILNetSimTracing::DoRun() {
 
     uint64_t targetPositionIndex = 0;
     std::vector<double> nextTarget;
+    double targetYaw;
 
     double bytesPerSecond = buoyDataRate / 8.;
     double nanosPerByte = 1e9 / bytesPerSecond;
@@ -760,6 +773,7 @@ void HILNetSimTracing::DoRun() {
 
     dccomms::Timer desiredPositionUpdateTimer;
     desiredPositionUpdateTimer.Reset();
+    nextTarget = hilTargets[targetPositionIndex];
     while (1) {
       if (!initPosReached) {
         std::this_thread::sleep_for(chrono::seconds(1));
@@ -768,14 +782,22 @@ void HILNetSimTracing::DoRun() {
       if (desiredPositionUpdateTimer.Elapsed() >
           desiredPositionUpdateIntervalMillis) {
         targetPositionIndex = (targetPositionIndex + 1) % hilTargets.size();
+        nextTarget = hilTargets[targetPositionIndex];
         desiredPositionUpdateTimer.Reset();
         Info("BUOY: UPDATE POSITION");
       }
+      wMthil_mutex.lock();
+      wMthil.setOrigin(
+          tf::Vector3(nextTarget[0], nextTarget[1], nextTarget[2]));
+
+      targetYaw = GetContinuousRot(nextTarget[3]);
+      wMthil.setRotation(tf::createQuaternionFromYaw(targetYaw).normalize());
+      wMthil_updated = true;
+      wMthil_mutex.unlock();
 
       // Update leader0 position
       pkt->SetDestAddr(hil_ac_addr);
       pkt->SetSeq(l0seq++);
-      nextTarget = hilTargets[targetPositionIndex];
       *x = static_cast<int16_t>(std::round(nextTarget[0] * 100));
       *y = static_cast<int16_t>(std::round(nextTarget[1] * 100));
       *z = static_cast<int16_t>(std::round(nextTarget[2] * 100));
@@ -829,11 +851,14 @@ void HILNetSimTracing::DoRun() {
     pkt->SetSrcAddr(hil_ac_addr);
 
     uint32_t seq = 0;
-    uint32_t pdSize = explorersPacketSize;
+    uint32_t pdSize = hilPacketSize;
 
-    double bytesPerSecond = explorersDataRate / 8.;
+    double bytesPerSecond = hilDataRate / 8.;
     double nanosPerByte = 1e9 / bytesPerSecond;
     uint64_t nanos;
+
+    nanos =
+        static_cast<uint64_t>(std::ceil(round(hilPacketSize * nanosPerByte)));
 
     tf::Transform position;
     while (true) {
@@ -855,9 +880,6 @@ void HILNetSimTracing::DoRun() {
       hil_large << pkt;
       Info("HIL: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
            pkt->GetSeq());
-
-      nanos = static_cast<uint64_t>(
-          std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
 
       std::this_thread::sleep_for(chrono::nanoseconds(nanos));
     }
@@ -882,7 +904,7 @@ void HILNetSimTracing::DoRun() {
         dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
         uint32_t seq = pkt->GetSeq();
-        Info("L1: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
+        Info("HIL: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
              pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
              *pitch, *yaw);
         wMthil_comms_mutex.lock();
