@@ -248,26 +248,34 @@ void HILNetSimTracing::explorerTxWork(int src, int dst,
   pkt->SetDestAddr(dst);
 
   uint32_t seq = 0;
-  uint32_t pdSize = 1 + 12;
+  uint32_t pdSize = explorersPacketSize;
   tf::Transform position;
+
+  double bytesPerSecond = explorersDataRate / 8.;
+  double nanosPerByte = 1e9 / bytesPerSecond;
+  uint64_t nanos;
+
   while (true) {
     mutex.lock();
     position = wMeRef;
     mutex.unlock();
-    *x = position.getOrigin().x() * 100;
-    *y = position.getOrigin().y() * 100;
-    *z = position.getOrigin().z() * 100;
+    *x = static_cast<int16_t>(position.getOrigin().x() * 100);
+    *y = static_cast<int16_t>(position.getOrigin().y() * 100);
+    *z = static_cast<int16_t>(position.getOrigin().z() * 100);
     position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-    *roll = GetDiscreteRot(tmp_roll);
-    *pitch = GetDiscreteRot(tmp_pitch);
-    *yaw = GetDiscreteRot(tmp_yaw);
+    *roll = static_cast<int16_t>(GetDiscreteRot(tmp_roll));
+    *pitch = static_cast<int16_t>(GetDiscreteRot(tmp_pitch));
+    *yaw = static_cast<int16_t>(GetDiscreteRot(tmp_yaw));
 
     pkt->SetSeq(seq++);
     pkt->PayloadUpdated(pdSize);
     stream << pkt;
     Info("E{}: TX TO {} SEQ {}", src, pkt->GetDestAddr(), pkt->GetSeq());
 
-    std::this_thread::sleep_for(chrono::seconds(5));
+    nanos = static_cast<uint64_t>(
+        std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
+
+    std::this_thread::sleep_for(chrono::nanoseconds(nanos));
   }
 }
 
@@ -308,75 +316,76 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
 CommsDeviceServicePtr
 HILNetSimTracing::ConfigureDcMacLayerOnBuoy(const int &addr) {
   auto dcmac = dccomms::CreateObject<DcMac>();
+  dcmac->SetLogLevel(dcmacLogLevel);
   dcmac->SetPktBuilder(pb);
   dcmac->SetAddr(addr);
-  dcmac->SetDevBitRate(6900);
+  dcmac->SetDevBitRate(ac_bitrate);
   dcmac->SetDevIntrinsicDelay(1);
-  dcmac->SetMaxDistance(100);
+  dcmac->SetMaxDistance(ac_maxDistance);
   dcmac->SetPropSpeed(1500);
-  dcmac->SetMaxDataSlotDur(1000);
   dcmac->UpdateSlotDurFromEstimation();
   dcmac->SetMode(DcMac::Mode::master);
   if (use_rf_channels) {
-    dcmac->SetNumberOfNodes(4);
+    dcmac->SetNumberOfNodes(rf_nnodes);
   } else {
-    dcmac->SetNumberOfNodes(9);
+    dcmac->SetNumberOfNodes(ac_nnodes);
   }
+  return dcmac;
 }
 CommsDeviceServicePtr
 HILNetSimTracing::ConfigureDcMacLayerOnExplorer(const int &addr) {
   auto dcmac = dccomms::CreateObject<DcMac>();
+  dcmac->SetLogLevel(dcmacLogLevel);
   if (use_rf_channels) {
     dcmac->SetPktBuilder(pb);
     dcmac->SetAddr(addr);
-    dcmac->SetDevBitRate(1900);
+    dcmac->SetDevBitRate(rf_bitrate);
     dcmac->SetDevIntrinsicDelay(1);
-    dcmac->SetMaxDistance(5);
+    dcmac->SetMaxDistance(rf_maxDistance);
     dcmac->SetPropSpeed(3e8);
-    dcmac->SetNumberOfNodes(4);
-    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->SetNumberOfNodes(rf_nnodes);
     dcmac->UpdateSlotDurFromEstimation();
     dcmac->SetMode(DcMac::Mode::slave);
   } else {
     dcmac->SetPktBuilder(pb);
     dcmac->SetAddr(addr);
-    dcmac->SetDevBitRate(6900);
+    dcmac->SetDevBitRate(ac_bitrate);
     dcmac->SetDevIntrinsicDelay(1);
-    dcmac->SetMaxDistance(100);
+    dcmac->SetMaxDistance(ac_maxDistance);
     dcmac->SetPropSpeed(1500);
-    dcmac->SetNumberOfNodes(9);
-    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->SetNumberOfNodes(ac_nnodes);
     dcmac->UpdateSlotDurFromEstimation();
     dcmac->SetMode(DcMac::Mode::slave);
   }
+  return dcmac;
 }
 
 CommsDeviceServicePtr
 HILNetSimTracing::ConfigureDcMacLayerOnLeader(const int &addr, const bool &rf) {
   auto dcmac = dccomms::CreateObject<DcMac>();
+  dcmac->SetLogLevel(dcmacLogLevel);
   if (rf) {
     dcmac->SetPktBuilder(pb);
     dcmac->SetAddr(addr);
-    dcmac->SetDevBitRate(1900);
+    dcmac->SetDevBitRate(rf_bitrate);
     dcmac->SetDevIntrinsicDelay(1);
-    dcmac->SetMaxDistance(5);
+    dcmac->SetMaxDistance(rf_maxDistance);
     dcmac->SetPropSpeed(3e8);
-    dcmac->SetNumberOfNodes(4);
-    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->SetNumberOfNodes(rf_nnodes);
     dcmac->UpdateSlotDurFromEstimation();
     dcmac->SetMode(DcMac::Mode::master);
   } else {
     dcmac->SetPktBuilder(pb);
     dcmac->SetAddr(addr);
-    dcmac->SetDevBitRate(6900);
+    dcmac->SetDevBitRate(ac_bitrate);
     dcmac->SetDevIntrinsicDelay(1);
-    dcmac->SetMaxDistance(100);
+    dcmac->SetMaxDistance(ac_maxDistance);
     dcmac->SetPropSpeed(1500);
-    dcmac->SetNumberOfNodes(9);
-    dcmac->SetMaxDataSlotDur(1000);
+    dcmac->SetNumberOfNodes(ac_nnodes);
     dcmac->UpdateSlotDurFromEstimation();
-    dcmac->SetMode(DcMac::Mode::master);
+    dcmac->SetMode(DcMac::Mode::slave);
   }
+  return dcmac;
 }
 
 void HILNetSimTracing::DoRun() {
@@ -391,6 +400,7 @@ void HILNetSimTracing::DoRun() {
   op->ControlState.r = 0;
 
   op->SetTfMode(false);
+  op->SetLogLevel(cpplogging::warn);
   op->Start();
 
   std::thread reachInitPos([&]() {
@@ -506,9 +516,9 @@ void HILNetSimTracing::DoRun() {
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
 
-    hilMte1.setOrigin(tf::Vector3(0, -1.5, 0));
-    hilMte2.setOrigin(tf::Vector3(-1.5, -1.5, 0));
-    hilMte3.setOrigin(tf::Vector3(-1.5, 0, 0));
+    hilMte1.setOrigin(tf::Vector3(0, -2.5, 0));
+    hilMte2.setOrigin(tf::Vector3(-2.5, -2.5, 0));
+    hilMte3.setOrigin(tf::Vector3(-2.5, 0, 0));
 
     hilMte1.setRotation(rotation);
     hilMte2.setRotation(rotation);
@@ -733,41 +743,51 @@ void HILNetSimTracing::DoRun() {
     hilTargets.push_back(std::vector<double>{-0.23, 0.04, 0.44, 357});
 
     auto pkt = pb->Create();
-    pkt->SetSrcAddr(0);
+    pkt->SetSrcAddr(buoy_addr);
     auto pd = pkt->GetPayloadBuffer();
-    uint8_t *nrovs = pd;
     int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
             *pitch = roll + 1, *yaw = pitch + 1;
-    double tmp_roll, tmp_pitch, tmp_yaw;
 
-    uint32_t pdSize = 1 + 12;
+    uint32_t pdSize = buoyPacketSize;
     uint32_t l0seq = 0, l1seq = 0;
 
-    int targetPositionIndex = 0;
+    uint64_t targetPositionIndex = 0;
     std::vector<double> nextTarget;
+
+    double bytesPerSecond = buoyDataRate / 8.;
+    double nanosPerByte = 1e9 / bytesPerSecond;
+    uint64_t nanos;
+
+    dccomms::Timer desiredPositionUpdateTimer;
+    desiredPositionUpdateTimer.Reset();
     while (1) {
       if (!initPosReached) {
         std::this_thread::sleep_for(chrono::seconds(1));
         continue;
       }
-
-      uint idx = static_cast<uint>(targetPositionIndex);
+      if (desiredPositionUpdateTimer.Elapsed() >
+          desiredPositionUpdateIntervalMillis) {
+        targetPositionIndex = (targetPositionIndex + 1) % hilTargets.size();
+        desiredPositionUpdateTimer.Reset();
+        Info("BUOY: UPDATE POSITION");
+      }
 
       // Update leader0 position
-      pkt->SetDestAddr(1);
+      pkt->SetDestAddr(hil_ac_addr);
       pkt->SetSeq(l0seq++);
-      nextTarget = hilTargets[idx % hilTargets.size()];
-      *x = nextTarget[0] * 100;
-      *y = nextTarget[1] * 100;
-      *z = nextTarget[2] * 100;
-      *yaw = nextTarget[3];
+      nextTarget = hilTargets[targetPositionIndex];
+      *x = static_cast<int16_t>(std::round(nextTarget[0] * 100));
+      *y = static_cast<int16_t>(std::round(nextTarget[1] * 100));
+      *z = static_cast<int16_t>(std::round(nextTarget[2] * 100));
+      *yaw = static_cast<int16_t>(nextTarget[3]);
       pkt->PayloadUpdated(pdSize);
       buoy << pkt;
       Info("BUOY: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq());
 
-      std::this_thread::sleep_for(chrono::seconds(4));
+      nanos = static_cast<uint64_t>(
+          std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
 
-      targetPositionIndex++;
+      std::this_thread::sleep_for(chrono::nanoseconds(nanos));
     }
   });
 
@@ -809,19 +829,24 @@ void HILNetSimTracing::DoRun() {
     pkt->SetSrcAddr(hil_ac_addr);
 
     uint32_t seq = 0;
-    uint32_t pdSize = 1 + 12;
+    uint32_t pdSize = explorersPacketSize;
+
+    double bytesPerSecond = explorersDataRate / 8.;
+    double nanosPerByte = 1e9 / bytesPerSecond;
+    uint64_t nanos;
+
     tf::Transform position;
     while (true) {
       wMhil_mutex.lock();
       position = wMhil;
       wMhil_mutex.unlock();
-      *x = position.getOrigin().x() * 100;
-      *y = position.getOrigin().y() * 100;
-      *z = position.getOrigin().z() * 100;
+      *x = static_cast<int16_t>(std::round(position.getOrigin().x() * 100));
+      *y = static_cast<int16_t>(std::round(position.getOrigin().y() * 100));
+      *z = static_cast<int16_t>(std::round(position.getOrigin().z() * 100));
       position.getBasis().getRPY(tmp_roll, tmp_pitch, tmp_yaw);
-      *roll = GetDiscreteRot(tmp_roll);
-      *pitch = GetDiscreteRot(tmp_pitch);
-      *yaw = GetDiscreteRot(tmp_yaw);
+      *roll = static_cast<int16_t>(GetDiscreteRot(tmp_roll));
+      *pitch = static_cast<int16_t>(GetDiscreteRot(tmp_pitch));
+      *yaw = static_cast<int16_t>(GetDiscreteRot(tmp_yaw));
 
       pkt->SetSeq(seq++);
       pkt->SetDestAddr(buoy_addr);
@@ -831,7 +856,10 @@ void HILNetSimTracing::DoRun() {
       Info("HIL: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
            pkt->GetSeq());
 
-      std::this_thread::sleep_for(chrono::seconds(5));
+      nanos = static_cast<uint64_t>(
+          std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
+
+      std::this_thread::sleep_for(chrono::nanoseconds(nanos));
     }
   });
   hilTxWork.detach();

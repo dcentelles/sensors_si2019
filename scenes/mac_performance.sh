@@ -243,18 +243,20 @@ tmplscene=$scenesdir/hil.xml
 echo "TMPL SCENE: $tmplscene"
 if [ "$protocol" == "dcmac" ]
 then
+	tracingscript=UMCIMAC_HILNetSimTracing
 	scene=$scenesdir/$protocol.xml
 	cp $tmplscene $scene
 	cd ../modules/umci
 	gitrev=$(git rev-parse --short HEAD)
 	cd -
-	library=libumci_${gitrev}.so
-	library=$(realpath ${library})
+	library=$(rospack find sensors_si2019)/../../devel/lib/libumci_${gitrev}.so
+#	library=$(realpath ${library})
 	library=$(echo "$library" | sed 's/\//\\\//g')
 	echo $library
 	pktbuilder="DcMacPacketBuilder"
 	libpath="<libPath>$library<\/libPath>"
 else
+	tracingscript=HILNetSimTracing
 	scene=$scenesdir/$protocol.xml
 	pktbuilder="VariableLength2BPacketBuilder"
 	sed "s/<name><\/name>/<name>$protocol<\/name>/g" $tmplscene > $scene
@@ -262,7 +264,6 @@ else
 fi
 
 echannel=0
-tracingscript=HILNetSimTracing
 disablerf=1
 buoy_addr=0
 hil_ac_addr=1
@@ -294,7 +295,7 @@ if [ "$protocol" == "dcmac" ]
 then
 	roslaunch sensors_si2019 hil.launch debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
 else
-	export NS_LOG="AquaSimMac=all|prefix_time:AquaSimSFama=all|prefix_time:AquaSimAloha=all|prefix_time"
+#	export NS_LOG="AquaSimMac=all|prefix_time:AquaSimSFama=all|prefix_time:AquaSimAloha=all|prefix_time"
        	roslaunch sensors_si2019 hil.launch debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
 fi
 

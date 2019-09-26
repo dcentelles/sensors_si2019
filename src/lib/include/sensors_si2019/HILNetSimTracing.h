@@ -95,6 +95,19 @@ public:
 protected:
   bool use_rf_channels;
   bool use_umci_mac;
+  uint32_t buoyPacketSize = 50;
+  uint32_t explorersPacketSize = 600;
+  uint32_t explorersDataRate = 300;
+  uint32_t buoyDataRate = 100;
+  uint64_t desiredPositionUpdateIntervalMillis = 15000;
+
+  double ac_maxDistance = 100;
+  double rf_maxDistance = 5;
+  uint32_t rf_bitrate = 1800;
+  uint32_t ac_bitrate = 1800;
+  uint32_t rf_nnodes = 4;
+  uint32_t ac_nnodes = 5;
+  cpplogging::LogLevel dcmacLogLevel = info;
 };
 
 class RF_HILNetSimTracing : public HILNetSimTracing {
