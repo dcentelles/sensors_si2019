@@ -270,7 +270,9 @@ void HILNetSimTracing::explorerTxWork(int src, int dst,
     pkt->SetSeq(seq++);
     pkt->PayloadUpdated(pdSize);
     stream << pkt;
-    Info("E{}: TX TO {} SEQ {}", src, pkt->GetDestAddr(), pkt->GetSeq());
+    Info("E{}: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", src,
+         pkt->GetDestAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+         *roll, *pitch, *yaw);
 
     nanos = static_cast<uint64_t>(
         std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
@@ -300,9 +302,9 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
       dpitch = GetContinuousRot(*pitch);
       dyaw = GetContinuousRot(*yaw);
       rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
-      Info("E{}: RX FROM {} SEQ {} SIZE {} LP: {} {} {} {} {} {}", src,
-           pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), pos.x(),
-           pos.y(), pos.z(), droll, dpitch, dyaw);
+      Info("E{}: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}", src,
+           pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+           *roll, *pitch, *yaw);
 
       //      mutex.lock();
       //      wMl_comms.setOrigin(pos);
@@ -723,9 +725,9 @@ void HILNetSimTracing::DoRun() {
         dpitch = GetContinuousRot(*pitch);
         dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
-        Info("BUOY: RX FROM {} SEQ {} SIZE {} LP: {} {} {} {} {} {}",
-             pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), pos.x(),
-             pos.y(), pos.z(), droll, dpitch, dyaw);
+        Info("BUOY: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}",
+             pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+             *roll, *pitch, *yaw);
 
         if (pkt->GetSrcAddr() == hil_ac_addr) {
           wMhil_comms_mutex.lock();
@@ -777,6 +779,7 @@ void HILNetSimTracing::DoRun() {
     while (1) {
       if (!initPosReached) {
         std::this_thread::sleep_for(chrono::seconds(1));
+        desiredPositionUpdateTimer.Reset();
         continue;
       }
       if (desiredPositionUpdateTimer.Elapsed() >
@@ -802,9 +805,13 @@ void HILNetSimTracing::DoRun() {
       *y = static_cast<int16_t>(std::round(nextTarget[1] * 100));
       *z = static_cast<int16_t>(std::round(nextTarget[2] * 100));
       *yaw = static_cast<int16_t>(nextTarget[3]);
+      *roll = 0;
+      *pitch = 0;
       pkt->PayloadUpdated(pdSize);
       buoy << pkt;
-      Info("BUOY: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq());
+      Info("BUOY: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
+           pkt->GetSeq(), pkt->GetPacketSize(), *y, *y, *z, *roll, *pitch,
+           *yaw);
 
       nanos = static_cast<uint64_t>(
           std::ceil(round(pkt->GetPacketSize() * nanosPerByte)));
@@ -878,8 +885,9 @@ void HILNetSimTracing::DoRun() {
       pkt->PayloadUpdated(pdSize);
 
       hil_large << pkt;
-      Info("HIL: TX TO {} SEQ {}", pkt->GetDestAddr(), pkt->GetSeq(),
-           pkt->GetSeq());
+      Info("HIL: TX TO {} SEQ {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
+           pkt->GetSeq(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+           *roll, *pitch, *yaw);
 
       std::this_thread::sleep_for(chrono::nanoseconds(nanos));
     }
@@ -904,7 +912,7 @@ void HILNetSimTracing::DoRun() {
         dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
         uint32_t seq = pkt->GetSeq();
-        Info("HIL: RX FROM {} SEQ {} SIZE {} REQ: {} {} {} {} {} {}",
+        Info("HIL: RX FROM {} SEQ {} SIZE {} P {} {} {} {} {} {}",
              pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
              *pitch, *yaw);
         wMthil_comms_mutex.lock();
