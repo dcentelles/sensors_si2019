@@ -145,7 +145,8 @@ void HILNetSimTracing::Configure() {
   // the native spdlog::pattern_formatter instead:
   // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
   // %v"));
-  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("%D %T.%F %v"));
+  // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("%D %T.%F
+  // %v"));
 
   //---------------------------------------------------------------------
 
@@ -394,6 +395,13 @@ void HILNetSimTracing::ArmHIL() {
   op->ControlState.arm = true;
 }
 
+void HILNetSimTracing::TestExit() {
+  Info("TEST SUCCEED. EXITING...");
+  FlushLog();
+  std::this_thread::sleep_for(chrono::seconds(5));
+  exit(EXIT_SUCCESS);
+}
+
 void HILNetSimTracing::DoRun() {
 
   op->SetReferenceTfName("local_origin_ned");
@@ -540,7 +548,7 @@ void HILNetSimTracing::DoRun() {
   std::thread hilWorker([&]() {
     tf::TransformBroadcaster sender;
     tf::TransformListener listener;
-    tf::Transform wMinit, hilMinit;
+    tf::Transform wMinit, hilMinit, hilMthil, hilMthil_comms;
     tf::TransformBroadcaster broadcaster;
 
     tf::Quaternion rotation;
@@ -549,6 +557,7 @@ void HILNetSimTracing::DoRun() {
     wMinit.setRotation(rotation.normalize());
 
     tf::Vector3 origin(0, 0, 0);
+    dccomms::Timer logTimer;
     while (!wMhil_updated) {
       std::this_thread::sleep_for(chrono::seconds(1));
     }
@@ -579,6 +588,17 @@ void HILNetSimTracing::DoRun() {
             initPosReached = true;
           }
         }
+
+        hilMthil = wMhil.inverse() * wMthil;
+        hilMthil_comms = wMhil.inverse() * wMthil_comms;
+
+        if (logTimer.Elapsed() > derrorLogIntervalMillis) {
+          Info("HIL DERR R {} C {}", e1_addr,
+               hilMthil.getOrigin().distance(origin),
+               hilMthil_comms.getOrigin().distance(origin));
+          logTimer.Reset();
+        }
+
         wMhil_lock.unlock();
         wMthil_lock.unlock();
         wMthil_comms_lock.unlock();
@@ -614,6 +634,8 @@ void HILNetSimTracing::DoRun() {
     hilMte3.setRotation(rotation);
 
     ros::Rate rate(10);
+    tf::Vector3 origin(0, 0, 0);
+    dccomms::Timer logTimer;
     while (1) {
       if (!wMhil_comms_received) {
         std::this_thread::sleep_for(chrono::seconds(1));
@@ -626,9 +648,35 @@ void HILNetSimTracing::DoRun() {
       wMe2_mutex.lock();
       wMe3_mutex.lock();
       wMhil_comms_mutex.lock();
-      e1Mte1 = wMe1.inverse() * wMhil_comms * hilMte1;
-      e2Mte2 = wMe2.inverse() * wMhil_comms * hilMte2;
-      e3Mte3 = wMe3.inverse() * wMhil_comms * hilMte3;
+
+      try {
+        e1Mte1_comms = wMe1.inverse() * wMhil_comms * hilMte1;
+        e2Mte2_comms = wMe2.inverse() * wMhil_comms * hilMte2;
+        e3Mte3_comms = wMe3.inverse() * wMhil_comms * hilMte3;
+
+        e1Mte1 = wMe1.inverse() * wMhil * hilMte1;
+        e2Mte2 = wMe2.inverse() * wMhil * hilMte2;
+        e3Mte3 = wMe3.inverse() * wMhil * hilMte3;
+        if (logTimer.Elapsed() > derrorLogIntervalMillis) {
+          Info("E{} DERR R {} C {}", e1_addr,
+               e1Mte1.getOrigin().distance(origin),
+               e1Mte1_comms.getOrigin().distance(origin));
+          Info("E{} DERR R {} C {}", e2_addr,
+               e2Mte2.getOrigin().distance(origin),
+               e2Mte2_comms.getOrigin().distance(origin));
+          Info("E{} DERR R {} C {}", e3_addr,
+               e3Mte3.getOrigin().distance(origin),
+               e3Mte3_comms.getOrigin().distance(origin));
+          logTimer.Reset();
+        }
+
+      } catch (tf::TransformException &ex) {
+        op->ResetPID();
+        Warn("TF: {}", ex.what());
+        std::this_thread::sleep_for(chrono::milliseconds(100));
+        continue;
+      }
+
       wMhil_comms_mutex.unlock();
       wMe1_mutex.unlock();
       wMe2_mutex.unlock();
@@ -636,23 +684,23 @@ void HILNetSimTracing::DoRun() {
 
       // Get Translations
       //    team 1
-      auto e1Tte1 = e1Mte1.getOrigin();
+      auto e1Tte1 = e1Mte1_comms.getOrigin();
       double e1x = e1Tte1.getX(), e1y = e1Tte1.getY(), e1z = e1Tte1.getZ();
-      auto e2Tte2 = e2Mte2.getOrigin();
+      auto e2Tte2 = e2Mte2_comms.getOrigin();
       double e2x = e2Tte2.getX(), e2y = e2Tte2.getY(), e2z = e2Tte2.getZ();
-      auto e3Tte3 = e3Mte3.getOrigin();
+      auto e3Tte3 = e3Mte3_comms.getOrigin();
       double e3x = e3Tte3.getX(), e3y = e3Tte3.getY(), e3z = e3Tte3.getZ();
 
       // Get Rotations
       //    team 1
       tfScalar roll1, pitch1, yaw1;
-      auto mat1 = e1Mte1.getBasis();
+      auto mat1 = e1Mte1_comms.getBasis();
       mat1.getRPY(roll1, pitch1, yaw1);
       tfScalar roll2, pitch2, yaw2;
-      auto mat2 = e2Mte2.getBasis();
+      auto mat2 = e2Mte2_comms.getBasis();
       mat2.getRPY(roll2, pitch2, yaw2);
       tfScalar roll3, pitch3, yaw3;
-      auto mat3 = e3Mte3.getBasis();
+      auto mat3 = e3Mte3_comms.getBasis();
       mat3.getRPY(roll3, pitch3, yaw3);
 
       double vx, vy, vz;
@@ -788,6 +836,9 @@ void HILNetSimTracing::DoRun() {
         nextTarget = hilTargets[targetPositionIndex];
         desiredPositionUpdateTimer.Reset();
         Info("BUOY: UPDATE POSITION");
+        //        if (targetPositionIndex == 0) {
+        //          TestExit();
+        //        }
       }
       wMthil_mutex.lock();
       wMthil.setOrigin(

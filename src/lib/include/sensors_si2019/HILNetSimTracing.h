@@ -75,7 +75,8 @@ public:
 
   std::mutex wMe1_mutex, wMe2_mutex, wMe3_mutex, wMhil_mutex, wMhil_comms_mutex,
       wMthil_comms_mutex, wMthil_mutex;
-  tf::Transform e1Mte1, e2Mte2, e3Mte3, wMthil_comms, wMthil;
+  tf::Transform e1Mte1_comms, e2Mte2_comms, e3Mte3_comms, wMthil_comms, wMthil,
+      e1Mte1, e2Mte2, e3Mte3;
   tf::StampedTransform hilMte1, hilMte2, hilMte3, wMhil, wMe1, wMe2, wMe3;
 
   tf::Transform wMhil_comms;
@@ -92,6 +93,8 @@ public:
   bool initPosReached = false;
   bool wMhil_updated = false;
   bool wMthil_updated = false;
+
+  void TestExit();
 
   void ArmHIL();
 
@@ -113,6 +116,7 @@ protected:
   uint32_t rf_nnodes = 4;
   uint32_t ac_nnodes = 5;
   cpplogging::LogLevel dcmacLogLevel = off;
+  uint32_t derrorLogIntervalMillis = 250;
 };
 
 class RF_HILNetSimTracing : public HILNetSimTracing {
