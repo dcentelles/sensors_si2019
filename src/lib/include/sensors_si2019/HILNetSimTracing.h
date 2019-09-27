@@ -91,7 +91,7 @@ public:
   dccomms::Ptr<OperatorController> op;
   bool initPosReached = false;
   bool wMhil_updated = false;
-  bool wMthil_updated = true;
+  bool wMthil_updated = false;
 
   void ArmHIL();
 
@@ -104,7 +104,7 @@ protected:
   uint32_t explorersDataRate = 300;
   uint32_t buoyDataRate = 100;
   uint32_t hilDataRate = 100;
-  uint64_t desiredPositionUpdateIntervalMillis = 15000;
+  uint64_t desiredPositionUpdateIntervalMillis = 25000;
 
   double ac_maxDistance = 100;
   double rf_maxDistance = 5;

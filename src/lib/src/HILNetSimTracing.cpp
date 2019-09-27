@@ -6,6 +6,7 @@
 #include <sensors_si2019/Constants.h>
 #include <sensors_si2019/HILNetSimTracing.h>
 #include <sensors_si2019/utils.hpp>
+#include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <umci/DcMac.h>
@@ -44,9 +45,9 @@ void HILNetSimTracing::PacketTransmitting(std::string path,
                                           ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
-  //  Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-  //       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-  //       header.GetPacketSize());
+  Info("[{}] TX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+       header.GetPacketSize());
 }
 
 void HILNetSimTracing::PacketDropsUpdated(std::string path, uint32_t oldValue,
@@ -99,27 +100,25 @@ void HILNetSimTracing::PacketReceived(std::string path, ROSCommsDevicePtr dev,
                                       ns3ConstPacketPtr pkt) {
   NetsimHeader header;
   pkt->PeekHeader(header);
-  //  Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
-  //       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
-  //       header.GetPacketSize());
+  Info("[{}] RX -- ID: {} ; MAC: {} ; Seq: {} ; Size: {}", path,
+       dev->GetDccommsId(), dev->GetMac(), header.GetSeqNum(),
+       header.GetPacketSize());
 }
 
 void HILNetSimTracing::MacRx(std::string path, ROSCommsDevicePtr dev,
                              ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
-  //  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path,
-  //  dev->GetDccommsId(),
-  //       dev->GetMac(), header.GetSize());
+  Info("[{}] MAC RX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+       dev->GetMac(), header.GetSize());
 }
 
 void HILNetSimTracing::MacTx(std::string path, ROSCommsDevicePtr dev,
                              ns3ConstPacketPtr pkt) {
   AquaSimHeader header;
   pkt->PeekHeader(header);
-  //  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path,
-  //  dev->GetDccommsId(),
-  //       dev->GetMac(), header.GetSize());
+  Info("[{}] MAC TX -- ID: {} ; MAC: {} ; Size: {}", path, dev->GetDccommsId(),
+       dev->GetMac(), header.GetSize());
 }
 
 void HILNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
@@ -301,7 +300,7 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
       droll = GetContinuousRot(*roll);
       dpitch = GetContinuousRot(*pitch);
       dyaw = GetContinuousRot(*yaw);
-      rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
+      rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
       Info("E{}: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}", src,
            pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
            *roll, *pitch, *yaw);
@@ -547,7 +546,7 @@ void HILNetSimTracing::DoRun() {
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
     wMinit.setOrigin(tf::Vector3(0, 0, 0.85));
-    wMinit.setRotation(rotation);
+    wMinit.setRotation(rotation.normalize());
 
     tf::Vector3 origin(0, 0, 0);
     while (!wMhil_updated) {
@@ -604,6 +603,7 @@ void HILNetSimTracing::DoRun() {
 
     tf::Quaternion rotation;
     rotation.setRPY(0, 0, 0);
+    rotation.normalize();
 
     hilMte1.setOrigin(tf::Vector3(0, -2.5, 0));
     hilMte2.setOrigin(tf::Vector3(-2.5, -2.5, 0));
@@ -724,7 +724,7 @@ void HILNetSimTracing::DoRun() {
         droll = GetContinuousRot(*roll);
         dpitch = GetContinuousRot(*pitch);
         dyaw = GetContinuousRot(*yaw);
-        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
+        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
         Info("BUOY: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}",
              pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
              *roll, *pitch, *yaw);
@@ -910,7 +910,7 @@ void HILNetSimTracing::DoRun() {
         droll = GetContinuousRot(*roll);
         dpitch = GetContinuousRot(*pitch);
         dyaw = GetContinuousRot(*yaw);
-        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw);
+        rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
         uint32_t seq = pkt->GetSeq();
         Info("HIL: RX FROM {} SEQ {} SIZE {} P {} {} {} {} {} {}",
              pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
