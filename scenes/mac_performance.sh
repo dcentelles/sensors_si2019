@@ -18,9 +18,8 @@ echo "protocol: $protocol"
 echo "BASEDIR: $basedir"
 bindir="../build/" #TODO: as argument
 resultsdir=$basedir/results
-rawlogdir=$basedir/rawlog
 
-rm -rf $resultsdir $rawlogdir
+rm -rf $resultsdir 
 if [ "$debug" == "debug" ]
 then
 	echo "debug"
@@ -32,197 +31,19 @@ fi
 
 rm -rf /dev/mqueue/*
 mkdir -p $resultsdir
-mkdir -p $rawlogdir
-
 
 kill -9 $(ps aux | grep "bash .*$scriptName" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 
 ###################################################
 ###################################################
 
-awktime='
-BEGIN{\
-	"cat \""dateref"\" | date -u -f - +%s" | getline t0
-}
-{\
-	where = match($0, "[0-9]+\\/[0-9]+\\/[0-9]+ [0-9]+:[0-9]+:[0-9]+\\.[0-9]+")
-	if(where != 0)
-	{
-		time=substr($0, RSTART, RLENGTH)
-        where = match($0, patt)
-	    if(where != 0)
-	    {
-		    f = "date -u -d \""time"\" +%s" 
-		    f | getline seconds
-		    close(f)
-		    f = "date -u -d \""time"\" +%N"
-		    f | getline nanos
-		    close(f)
-		    seconds = (seconds - t0)
-		    tt = seconds + nanos / 1e9
-		    f = "date -u -d \""time"\" +%s.%9N"
-		    f | getline tt2
-		    close(f)
-		    printf("%.9f\t%d\t%d\n", tt, $7, $9)
-        }
-	} 
-}
-END{\
-}
-'
-
-awkgap='
-BEGIN{\
-	samples = 0
-	sum = 0
-	sum2 = 0
-}
-{\
-	cont += 1
-	dif = $2 - old2
-	if(dif==0) 
-		dif = 1
-	if(dif > 0) 
-	{ 
-		if(cont > 1) 
-		{
-			gap = ($1 - old1) / dif
-			printf("%d\t%.9f\n", $2, gap)
-			sum += gap
-			sum2 += gap * gap
-			samples += 1
-		} 
-		old1 = $1; old2 = $2
-	}
-}
-END{\
-	avg = sum / samples
-	var = (sum2 - (avg * sum)) / (samples)
-	sd = sqrt(var)
-	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
-}'
-
-awkjitter='
-BEGIN{\
-	samples = 0
-	sum = 0
-	sum2 = 0
-}
-{\
-	if (samples > 0)
-	{
-		gap = ($2 - old2)
-		gap = gap < 0 ? -gap : gap
-		printf("%d\t%.9f\n", $1, gap)
-		sum += gap
-		sum2 += gap * gap
-	}
-	samples += 1
-	old2 = $2
-}
-END{\
-	avg = sum / samples
-	var = (sum2 - (avg * sum)) / (samples)
-	sd = sqrt(var)
-	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
-}'
-
-awkthroughput='
-BEGIN{\
-	nbytes = 0
-}
-{\
-	nbytes += $3
-}
-END{\
-	printf("%d", nbytes)
-}'
-
-awkavg='
-BEGIN{\
-	samples = 0
-	sum = 0
-	sum2 = 0
-}
-{\
-	value = $col
-	sum += value
-	sum2 += value * value
-	samples += 1
-}
-END{\
-	avg = sum / samples
-	var = (sum2 - (avg * sum)) / (samples)
-	sd = sqrt(var)
-	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
-}'
-
-txRaw='
-BEGIN{\
-    nbytes = 0
-    lines = 0
-}
-{\
-    where = match($0, "MAC TX -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-        nbytes += arr[1]
-        lines += 1;
-    }
-}
-END{\
-    printf("totalTxBytes=%d\n", nbytes);
-    printf("totalTxPackets=%d\n", lines)
-}'
-
-
-txRawDcMac='
-BEGIN{\
-    nbytes = 0
-    lines = 0
-}
-{\
-
-    where = match($0, "TX -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-	nbytes += arr[1]
-        lines += 1
-    }
-}
-END{\
-    printf("totalTxBytes=%d\n", nbytes);
-    printf("totalTxPackets=%d\n", lines)
-}'
-
-colScript='
-BEGIN{\
-    nbytes = 0
-    lines = 0
-}
-{\
-    where = match($0, "COL -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-	nbytes += arr[1]
-        lines += 1
-    }
-}
-END{\
-    printf("totalColBytes=%d\n", nbytes);
-    printf("totalColPackets=%d\n", lines)
-}'
-
-
-
-colScriptDcMac=$colScript
 
 ###################################################
 ###################################################
 
-now=$(date -u +%s)
+now=$(date +%s)
 daterefsecs=$now
-dateref=$(date -u -R -d @$daterefsecs)
+dateref=$(date -R -d @$daterefsecs)
 datereffile=$basedir/dateref
 echo "dateref: $dateref"
 echo $dateref > $datereffile
@@ -233,7 +54,7 @@ sim=$(cat simpid 2> /dev/null)
 kill -9 $rosrunproc > /dev/null 2> /dev/null
 kill -9 $sim > /dev/null 2> /dev/null
 
-sleep 5s
+#sleep 5s
 
 scenesdir=$(rospack find sensors_si2019)/scenes
 uwsimlog=$(realpath $basedir/uwsimnet.log)
@@ -334,33 +155,33 @@ echo "ROSRUN: $rosrunproc ; SIM: $sim"
 
 echo $rosrunproc > rosrunpid
 echo $sim > simpid
-sleep 10000s
-
-sleep ${testduration}s
+sleep 120s
 
 echo "SIGINT programs..."
 kill -s INT $rosrunproc > /dev/null 2> /dev/null
 kill -s INT $sim > /dev/null 2> /dev/null
 
-sleep 10s
+sleep 5s
 
 echo "SIGTERM programs..."
 kill -s TERM $rosrunproc > /dev/null 2> /dev/null
 kill -s TERM $sim > /dev/null 2> /dev/null
 
-sleep 10s
+sleep 5s
 
 echo "kill -9 programs..."
 kill -9 $(ps aux | grep "bash .*$scriptName" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 kill -9 $rosrunproc > /dev/null 2> /dev/null
 kill -9 $sim > /dev/null 2> /dev/null
 
-#mv $uwsimlog $resultsdir
-#mv $uwsimlograw $resultsdir
-#mv $scene $resultsdir
-#mv $datereffile $resultsdir
-#mv $rawlogdir $resultsdir
-#cp $scriptPath $resultsdir
-#echo $* > $resultsdir/notes.txt
+sleep 2s
+
+mv $uwsimlog $resultsdir
+mv $uwsimlograw $resultsdir
+mv $scene $basedir
+mv $datereffile $resultsdir
+cp $scriptPath $basedir
+echo $* > $basedir/notes.txt
+
 echo "Exit"
 

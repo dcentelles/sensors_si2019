@@ -145,8 +145,7 @@ void HILNetSimTracing::Configure() {
   // the native spdlog::pattern_formatter instead:
   // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("[%D %T.%F]
   // %v"));
-  // SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("%D %T.%F
-  // %v"));
+  SetLogFormatter(std::make_shared<spdlog::pattern_formatter>("%D %T.%F %v"));
 
   //---------------------------------------------------------------------
 
@@ -411,30 +410,17 @@ void HILNetSimTracing::DoRun() {
   ArmHIL();
 
   buoy_addr = 0;
+  hil_ac_addr = 1;
+  e1_addr = 2;
+  e2_addr = 3;
+  e3_addr = 4;
+  t0_dst = buoy_addr;
 
   if (use_umci_mac) {
 
     // Si usamos una capa mac externa a UWSim-NET podemos repetir las mac. No
     // obstante, en el xml estas mac han de ser diferente para no producir
     // error.
-
-    if (use_rf_channels) {
-      hil_ac_addr = 1;
-      hil_rf_addr = 0;
-      e1_addr = 1;
-      e2_addr = 2;
-      e3_addr = 3;
-
-      t0_dst = hil_rf_addr;
-
-    } else {
-      hil_ac_addr = 1;
-      e1_addr = 2;
-      e2_addr = 3;
-      e3_addr = 4;
-
-      t0_dst = buoy_addr;
-    }
 
     buoy = ConfigureDcMacLayerOnBuoy();
     hil_ac = ConfigureDcMacLayerOnLeader(hil_ac_addr, false);
@@ -447,31 +433,11 @@ void HILNetSimTracing::DoRun() {
     // Si usamos una capa mac implementada en UWSim-NET las mac han de ser
     // diferentes para cada dispositivo. TODO: permitir repeticion de macs en
     // UWSim-NET
-    hil_ac_addr = 1;
-    hil_rf_addr = 2;
-    e1_addr = 3;
-    e2_addr = 4;
-    e3_addr = 5;
-
-    if (use_rf_channels) {
-      t0_dst = hil_rf_addr;
-
-      hil_rf = dccomms::CreateObject<CommsDeviceService>(pb);
-
-    } else {
-      t0_dst = buoy_addr;
-    }
-
     buoy = dccomms::CreateObject<CommsDeviceService>(pb);
     hil_ac = dccomms::CreateObject<CommsDeviceService>(pb);
     e1 = dccomms::CreateObject<CommsDeviceService>(pb);
     e2 = dccomms::CreateObject<CommsDeviceService>(pb);
     e3 = dccomms::CreateObject<CommsDeviceService>(pb);
-  }
-
-  if (use_rf_channels) {
-    hil_rf->SetCommsDeviceId("comms_hil_rf");
-    hil_rf->Start();
   }
 
   buoy->SetCommsDeviceId("comms_buoy");
@@ -586,6 +552,7 @@ void HILNetSimTracing::DoRun() {
           hilMinit = wMhil.inverse() * wMinit;
           if (hilMinit.getOrigin().distance(origin) <= 0.2) {
             initPosReached = true;
+            Info("INIT POSITION REACHED");
           }
         }
 
@@ -593,8 +560,7 @@ void HILNetSimTracing::DoRun() {
         hilMthil_comms = wMhil.inverse() * wMthil_comms;
 
         if (logTimer.Elapsed() > derrorLogIntervalMillis) {
-          Info("HIL DERR R {} C {}", e1_addr,
-               hilMthil.getOrigin().distance(origin),
+          Info("HIL DERR R {} C {}", hilMthil.getOrigin().distance(origin),
                hilMthil_comms.getOrigin().distance(origin));
           logTimer.Reset();
         }
