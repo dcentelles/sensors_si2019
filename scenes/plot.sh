@@ -50,7 +50,7 @@ BEGIN{\
 			    f | getline tt
 			    close(f)
 			    tt2 = (tt - t0)
-			    printf("%.9f\t%f\t%f\n", tt2, $6, $8)
+			    printf("%.9f\t%s\n", tt2, $0)
 	             }
 		} 
 	}
@@ -214,7 +214,6 @@ dataplotdir=$rbasedir/dataplot
 plotsdir=$rbasedir/plots
 
 rm -rf $dataplotdir $plotsdir
-sleep 5s
 for proto in $rbasedir/*
 do
 	proto=$(basename "$proto")
@@ -224,22 +223,112 @@ do
 	e3tr=$protodataplotdir/derr3.tr
 	hiltr=$protodataplotdir/hilderr.tr
 
+	
 	logdir=$rbasedir/$proto/results/
 	uwsimlog=$logdir/uwsimnet.log
-	datereffile=$logdir/dateref
 	echo $logdir
 	mkdir -p $protodataplotdir
 
-	cat $uwsimlog | awk -v dateref=$datereffile -v patt="E$explorer1_addr DERR" "$awktime" | awk '{ print $1" "$2 }' > $e1tr
-	cat $uwsimlog | awk -v dateref=$datereffile -v patt="E$explorer2_addr DERR" "$awktime" | awk '{ print $1" "$2 }' > $e2tr
-	cat $uwsimlog | awk -v dateref=$datereffile -v patt="E$explorer3_addr DERR" "$awktime" | awk '{ print $1" "$2 }' > $e3tr
-	cat $uwsimlog | awk -v dateref=$datereffile -v patt="HIL DERR" "$awktime" | awk '{ print $1" "$2 }' > $hiltr
-	
-done
+	## COMPUTE TARGET ERROR
 
-titles=(Explorer1 Explorer2 Explorer3 HIL)
-datafiles=(derr1.tr derr2.tr derr3.tr hilderr.tr)
-plotnames="explorer1_err.pdf explorer2_err.pdf explorer3_err.pdf hil_err.pdf"
+	cat $uwsimlog | awk -v patt="E$explorer1_addr DERR" "$awktime" | awk '{ print $1" "$7 }' > $e1tr
+	cat $uwsimlog | awk -v patt="E$explorer2_addr DERR" "$awktime" | awk '{ print $1" "$7 }' > $e2tr
+	cat $uwsimlog | awk -v patt="E$explorer3_addr DERR" "$awktime" | awk '{ print $1" "$7 }' > $e3tr
+	cat $uwsimlog | awk -v patt="HIL DERR" "$awktime" | awk '{ print $1" "$7 }' > $hiltr
+
+	## COMPUTE COMMUNICATION DATA PLOT
+
+	hil2buoy_tx="HIL: TX TO 0"
+	hil2buoy_rx="BUOY: RX FROM 1"
+	e12buoy_tx="E2: TX TO 0"
+	e12buoy_rx="BUOY: RX FROM 2"
+	e22buoy_tx="E3: TX TO 0"
+	e22buoy_rx="BUOY: RX FROM 3"
+	e32buoy_tx="E4: TX TO 0"
+	e32buoy_rx="BUOY: RX FROM 4"
+	buoy2hil_tx="BUOY: TX TO 1"
+	buoy2hil_rx="HIL: RX FROM 0"
+	
+	for pair in \
+		"$hil2buoy_tx,$hil2buoy_rx,HIL -> BUOY,hil_buoy" \
+		"$e12buoy_tx,$e12buoy_rx,E1 -> BUOY,e1_buoy" \
+		"$e22buoy_tx,$e22buoy_rx,E2 -> BUOY,e2_buoy" \
+		"$e32buoy_tx,$e32buoy_rx,E3 -> BUOY,e3_buoy" \
+		"$buoy2hil_tx,$buoy2hil_rx,BUOY -> HIL,buoy_hil"
+	do 
+	        txpatt="$(cut -d',' -f1 <<< $pair)"
+	        rxpatt="$(cut -d',' -f2 <<< $pair)"
+	        title="$(cut -d',' -f3 <<< $pair)"
+		filename="$(cut -d',' -f4 <<< $pair)"
+	        echo "TX PATTERN: $txpatt"
+	        echo "RX PATTERN: $rxpatt"
+		echo "FLOW: $title"
+
+		txtr=$protodataplotdir/${filename}_tx.tr
+		rxtr=$protodataplotdir/${filename}_rx.tr
+		end2endtr=$protodataplotdir/${filename}_end2end.tr
+		jittertr=$protodataplotdir/${filename}_jitter.tr
+		genresults=$protodataplotdir/${filename}_genresults.txt
+		parsererrors=$protodataplotdir/${filename}_parsererrors.txt
+
+		#generate plot files time - seq.num
+
+		cat $uwsimlog | awk -v patt="$txpatt" "$awktime" | awk ' {printf("%.9f\t%s\n", $1, $9) }' > $txtr
+		cat $uwsimlog | awk -v patt="$rxpatt" "$awktime" | awk ' {printf("%.9f\t%s\n", $1, $9) }' > $rxtr
+
+		########## END 2 END ###################
+		curlinenum=1
+		while read line
+		do
+			t1=$(echo "$line" | cut -f 1 -d$'\t')
+			seq=$(echo "$line" | cut -f 2 -d$'\t')
+			#echo "T1: $t1 - SEQ: $seq"
+			found=false
+			curlinenum_before=$curlinenum
+			while [[ $found = false ]]
+			do
+				lineb=$(sed -n "$curlinenum p" < $txtr)
+				#echo "cur line: $lineb"
+				if [[ $lineb ]]
+				then
+					t0=$(echo "$lineb" | cut -f 1 -d$'\t')
+					seqb=$(echo "$lineb" | cut -f 2 -d$'\t')
+					if [ $seq -eq $seqb ]
+					then
+						end2end=$(bc <<< "scale=9; $t1 - $t0")
+						#echo "T1: $t1 --- T0: $t0 --- END2END: $end2end"
+						echo -e "$seq\t$end2end" >> $end2endtr
+						found=true
+					fi
+				else
+					echo "THIS IS NOT POSSILE: $curlinenum" >> $parsererrors
+					break
+				fi
+				((curlinenum++))
+			done
+			if [[ $found = false ]]
+			then
+				#Es posible que el evento de transmision se haya filtrado (se ha realizado antes de que el robot llegue a la posicion de inicio
+				curlinenum=$curlinenum_before
+			fi
+		done < $rxtr
+		echo "End To End:" | tee -a $genresults
+		cat $end2endtr | awk -v col=2 "$awkavg" | tee -a $genresults
+		cat $end2endtr | awk "$awkjitter" > jitter.tr.tmp
+		echo "Jitter:" | tee -a $genresults
+		cat jitter.tr.tmp | head -n -1 > $jittertr
+		cat jitter.tr.tmp | tail -n 1 | tee -a $genresults
+		rm -f *.tmp
+	done #FOR PAIR
+done #FOR PROTO
+
+xlabeldef="Time (s)"
+e2elabel="End to End (s)"
+titles=(Explorer1 Explorer2 Explorer3 HIL "HIL->BUOY" "E1->BUOY" "E2->BUOY" "E3->BUOY" "BUOY->HIL")
+datafiles=(derr1.tr derr2.tr derr3.tr hilderr.tr hil_buoy_end2end.tr e1_buoy_end2end.tr e2_buoy_end2end.tr e3_buoy_end2end.tr buoy_hil_end2end.tr)
+plotnames="explorer1_err.pdf explorer2_err.pdf explorer3_err.pdf hil_err.pdf hil_buoy_e2e.pdf e1_buoy_e2e.pdf e2_buoy_e2e.pdf e3_buoy_e2e.pdf buoy_hil_e2e.pdf"
+ylabels=("Error (m)" "Error (m)" "Error (m)" "Error (m)"     "$e2elabel"  "$e2elabel"  "$e2elabel"  "$e2elabel"  "$e2elabel") 
+xlabels=("$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef")
 mkdir -p $plotsdir
 idx0=0
 for plot in $plotnames
@@ -261,7 +350,9 @@ do
 	        echo -e "$newplotline" >> $tmpplotfile
 	done
 	title=${titles[$idx0]}
-	plotcmd="gnuplot -e \"title='$title' ; ylabel='Error (m)' ; xlabel='Time (s)' \" $tmpplotfile > $plotsdir/$plot"
+	ylabel=${ylabels[$idx0]}
+	xlabel=${xlabels[$idx0]}
+	plotcmd="gnuplot -e \"title='$title' ; ylabel='$ylabel' ; xlabel='$xlabel' \" $tmpplotfile > $plotsdir/$plot"
 	eval $plotcmd
 
 	let idx0=idx0+1

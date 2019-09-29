@@ -802,9 +802,9 @@ void HILNetSimTracing::DoRun() {
         nextTarget = hilTargets[targetPositionIndex];
         desiredPositionUpdateTimer.Reset();
         Info("BUOY: UPDATE POSITION");
-        //        if (targetPositionIndex == 0) {
-        //          TestExit();
-        //        }
+        if (targetPositionIndex == 0) {
+          Info("ALL TARGET POSITIONS HAS BEEN SENT");
+        }
       }
       wMthil_mutex.lock();
       wMthil.setOrigin(
@@ -902,9 +902,9 @@ void HILNetSimTracing::DoRun() {
       pkt->PayloadUpdated(pdSize);
 
       hil_large << pkt;
-      Info("HIL: TX TO {} SEQ {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
-           pkt->GetSeq(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
-           *roll, *pitch, *yaw);
+      Info("HIL: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
+           pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z, *roll, *pitch,
+           *yaw);
 
       std::this_thread::sleep_for(chrono::nanoseconds(nanos));
     }
@@ -929,7 +929,7 @@ void HILNetSimTracing::DoRun() {
         dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
         uint32_t seq = pkt->GetSeq();
-        Info("HIL: RX FROM {} SEQ {} SIZE {} P {} {} {} {} {} {}",
+        Info("HIL: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}",
              pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
              *pitch, *yaw);
         wMthil_comms_mutex.lock();

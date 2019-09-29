@@ -155,7 +155,7 @@ echo "ROSRUN: $rosrunproc ; SIM: $sim"
 
 echo $rosrunproc > rosrunpid
 echo $sim > simpid
-sleep 120s
+sleep 360s
 
 echo "SIGINT programs..."
 kill -s INT $rosrunproc > /dev/null 2> /dev/null
