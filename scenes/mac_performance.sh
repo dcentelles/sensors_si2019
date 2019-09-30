@@ -155,13 +155,8 @@ echo "ROSRUN: $rosrunproc ; SIM: $sim"
 
 echo $rosrunproc > rosrunpid
 echo $sim > simpid
-sleep 360s
+sleep 370s
 
-echo "SIGINT programs..."
-kill -s INT $rosrunproc > /dev/null 2> /dev/null
-kill -s INT $sim > /dev/null 2> /dev/null
-
-sleep 5s
 
 echo "SIGTERM programs..."
 kill -s TERM $rosrunproc > /dev/null 2> /dev/null
@@ -169,12 +164,18 @@ kill -s TERM $sim > /dev/null 2> /dev/null
 
 sleep 5s
 
+echo "SIGINT programs..."
+kill -s INT $rosrunproc > /dev/null 2> /dev/null
+kill -s INT $sim > /dev/null 2> /dev/null
+
+sleep 5s
+
 echo "kill -9 programs..."
-kill -9 $(ps aux | grep "bash .*$scriptName" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 kill -9 $rosrunproc > /dev/null 2> /dev/null
 kill -9 $sim > /dev/null 2> /dev/null
+kill -9 $(ps aux | grep "bash .*$scriptName" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 
-sleep 2s
+sleep 5s
 
 mv $uwsimlog $resultsdir
 mv $uwsimlograw $resultsdir

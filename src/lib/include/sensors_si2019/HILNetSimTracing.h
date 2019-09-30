@@ -107,7 +107,7 @@ protected:
   uint32_t explorersDataRate = 300;
   uint32_t buoyDataRate = 100;
   uint32_t hilDataRate = 100;
-  uint64_t desiredPositionUpdateIntervalMillis = 25000;
+  uint64_t desiredPositionUpdateIntervalMillis = 30000;
 
   double ac_maxDistance = 100;
   double rf_maxDistance = 5;
@@ -117,23 +117,16 @@ protected:
   uint32_t ac_nnodes = 5;
   cpplogging::LogLevel dcmacLogLevel = off;
   uint32_t derrorLogIntervalMillis = 250;
+  std::string hiltfname = "erov"; // aruco_mapping filtered
 };
 
-class RF_HILNetSimTracing : public HILNetSimTracing {
+// The following class can only be used when using the ArduSub SITL simulator
+// and its FDM output
+class UWSimTF_HILNetSimTracing : public HILNetSimTracing {
 public:
-  RF_HILNetSimTracing() : HILNetSimTracing() {}
+  UWSimTF_HILNetSimTracing() : HILNetSimTracing() {}
   void Configure() {
-    use_rf_channels = true;
-    HILNetSimTracing::Configure();
-  }
-};
-
-class RF_UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
-public:
-  RF_UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
-  void Configure() {
-    use_rf_channels = true;
-    use_umci_mac = true;
+    hiltfname = "rov"; // UWSim TF
     HILNetSimTracing::Configure();
   }
 };
@@ -146,4 +139,15 @@ public:
     HILNetSimTracing::Configure();
   }
 };
+
+class UWSimTF_UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
+public:
+  UWSimTF_UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = true;
+    hiltfname = "rov"; // UWSim TF
+    HILNetSimTracing::Configure();
+  }
+};
+
 } // namespace sensors_si2019

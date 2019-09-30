@@ -59,39 +59,6 @@ END{\
 }
 '
 
-
-
-awkgap='
-BEGIN{\
-	samples = 0
-	sum = 0
-	sum2 = 0
-}
-{\
-	cont += 1
-	dif = $2 - old2
-	if(dif==0) 
-		dif = 1
-	if(dif > 0) 
-	{ 
-		if(cont > 1) 
-		{
-			gap = ($1 - old1) / dif
-			printf("%d\t%.9f\n", $2, gap)
-			sum += gap
-			sum2 += gap * gap
-			samples += 1
-		} 
-		old1 = $1; old2 = $2
-	}
-}
-END{\
-	avg = sum / samples
-	var = (sum2 - (avg * sum)) / (samples)
-	sd = sqrt(var)
-	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
-}'
-
 awkjitter='
 BEGIN{\
 	samples = 0
@@ -117,17 +84,6 @@ END{\
 	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
 }'
 
-awkthroughput='
-BEGIN{\
-	nbytes = 0
-}
-{\
-	nbytes += $3
-}
-END{\
-	printf("%d", nbytes)
-}'
-
 awkavg='
 BEGIN{\
 	samples = 0
@@ -147,65 +103,24 @@ END{\
 	printf("%.9f\t%.9f\t%.9f\n", avg, sd, var);
 }'
 
-txRaw='
+awkminmax='
 BEGIN{\
-    nbytes = 0
-    lines = 0
+	min = 999999999999999999999999
+	max = -999999999999999999999999
 }
 {\
-    where = match($0, "MAC TX -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-        nbytes += arr[1]
-        lines += 1;
-    }
+	value = $col
+	if ( value < min )
+		min = value
+	if ( value > max )
+		max = value
 }
 END{\
-    printf("totalTxBytes=%d\n", nbytes);
-    printf("totalTxPackets=%d\n", lines)
+	printf("colmin=%.9f\n", min);
+	printf("colmax=%.9f\n", max);
 }'
 
 
-txRawDcMac='
-BEGIN{\
-    nbytes = 0
-    lines = 0
-}
-{\
-
-    where = match($0, "TX -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-	nbytes += arr[1]
-        lines += 1
-    }
-}
-END{\
-    printf("totalTxBytes=%d\n", nbytes);
-    printf("totalTxPackets=%d\n", lines)
-}'
-
-colScript='
-BEGIN{\
-    nbytes = 0
-    lines = 0
-}
-{\
-    where = match($0, "COL -- .*"devname".* Size: (.*)$", arr)
-    if(where != 0)
-    {
-	nbytes += arr[1]
-        lines += 1
-    }
-}
-END{\
-    printf("totalColBytes=%d\n", nbytes);
-    printf("totalColPackets=%d\n", lines)
-}'
-
-
-
-colScriptDcMac=$colScript
 
 ##############################
 ##############################
@@ -222,6 +137,7 @@ do
 	e2tr=$protodataplotdir/derr2.tr
 	e3tr=$protodataplotdir/derr3.tr
 	hiltr=$protodataplotdir/hilderr.tr
+	updatepositiontr=$protodataplotdir/updateposition.tr
 
 	
 	logdir=$rbasedir/$proto/results/
@@ -236,6 +152,9 @@ do
 	cat $uwsimlog | awk -v patt="E$explorer3_addr DERR" "$awktime" | awk '{ print $1" "$7 }' > $e3tr
 	cat $uwsimlog | awk -v patt="HIL DERR" "$awktime" | awk '{ print $1" "$7 }' > $hiltr
 
+	cat $uwsimlog | awk -v patt="BUOY: UPDATE POSITION" "$awktime" | awk '{ print $1 }' > $updatepositiontr
+
+
 	## COMPUTE COMMUNICATION DATA PLOT
 
 	hil2buoy_tx="HIL: TX TO 0"
@@ -248,6 +167,7 @@ do
 	e32buoy_rx="BUOY: RX FROM 4"
 	buoy2hil_tx="BUOY: TX TO 1"
 	buoy2hil_rx="HIL: RX FROM 0"
+
 	
 	for pair in \
 		"$hil2buoy_tx,$hil2buoy_rx,HIL -> BUOY,hil_buoy" \
@@ -324,19 +244,33 @@ done #FOR PROTO
 
 xlabeldef="Time (s)"
 e2elabel="End to End (s)"
+e2exlabel="Packet Seq. num."
 titles=(Explorer1 Explorer2 Explorer3 HIL "HIL->BUOY" "E1->BUOY" "E2->BUOY" "E3->BUOY" "BUOY->HIL")
 datafiles=(derr1.tr derr2.tr derr3.tr hilderr.tr hil_buoy_end2end.tr e1_buoy_end2end.tr e2_buoy_end2end.tr e3_buoy_end2end.tr buoy_hil_end2end.tr)
-plotnames="explorer1_err.pdf explorer2_err.pdf explorer3_err.pdf hil_err.pdf hil_buoy_e2e.pdf e1_buoy_e2e.pdf e2_buoy_e2e.pdf e3_buoy_e2e.pdf buoy_hil_e2e.pdf"
+plotnames="explorer1_err explorer2_err explorer3_err hil_err hil_buoy_e2e e1_buoy_e2e e2_buoy_e2e e3_buoy_e2e buoy_hil_e2e"
 ylabels=("Error (m)" "Error (m)" "Error (m)" "Error (m)"     "$e2elabel"  "$e2elabel"  "$e2elabel"  "$e2elabel"  "$e2elabel") 
-xlabels=("$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef")
+xlabels=("$xlabeldef" "$xlabeldef" "$xlabeldef" "$xlabeldef" "$e2exlabel" "$e2exlabel" "$e2exlabel" "$e2exlabel" "$e2exlabel")
+vertical=(0 0 0 1 0 0 0 0 0)
 mkdir -p $plotsdir
+
+updatePositionCmd="set arrow from $position,graph(0,0) to $position,graph(1,1) nohead lw 3 lc rgb \"red\""
 idx0=0
 for plot in $plotnames
 do
 	echo "Generating $plot..."
 	tmpplotfile=$plotsdir/$plot.plot
 	cp xyautoscale.plot $tmpplotfile
-	echo -e -n "plot" >> $tmpplotfile
+	
+	plotvertical=${vertical[$idx0]}
+	plotvertical_file=$plotvertical
+
+	if [[ "$plotvertical_file" == 1 ]]
+	then
+		tmpplotfile_verticals=$plotsdir/${plot}_verticals.plot
+		cp xyautoscale.plot $tmpplotfile_verticals
+	fi
+
+	firstplot=1
 
 	for proto in $dataplotdir/*
 	do
@@ -346,14 +280,38 @@ do
 		datafile=${datafiles[$idx0]}
 		datafile=$protodir/$datafile
 		title=$proto
+		if [[ "$plotvertical" == 1 ]]
+		then
+			awk '{print "set arrow from "$1",graph(0,0) to "$1",graph(1,1) nohead lw 3 lc rgb \"red\"" }' $protodir/updateposition.tr >> $tmpplotfile_verticals
+			plotvertical=0	
+		fi
+		if [[ "$firstplot" == 1 ]]
+		then
+			echo -e -n "plot" >> $tmpplotfile
+			if [[ "$plotvertical_file" == 1 ]]
+			then
+				echo -e -n "plot" >> $tmpplotfile_verticals
+			fi
+			firstplot=0
+		fi
 	        newplotline=" \"$datafile\" using 1:2 w lp ps 0.2 title \"$title\", \\"
 	        echo -e "$newplotline" >> $tmpplotfile
+		if [[ "$plotvertical_file" == 1 ]]
+		then
+	        	echo -e "$newplotline" >> $tmpplotfile_verticals
+		fi
 	done
 	title=${titles[$idx0]}
 	ylabel=${ylabels[$idx0]}
 	xlabel=${xlabels[$idx0]}
-	plotcmd="gnuplot -e \"title='$title' ; ylabel='$ylabel' ; xlabel='$xlabel' \" $tmpplotfile > $plotsdir/$plot"
+	plotcmd="gnuplot -e \"title='$title' ; ylabel='$ylabel' ; xlabel='$xlabel' \" $tmpplotfile > $plotsdir/${plot}.pdf"
 	eval $plotcmd
+
+	if [[ "$plotvertical_file" == 1 ]]
+	then
+		plotcmd="gnuplot -e \"title='$title' ; ylabel='$ylabel' ; xlabel='$xlabel' \" $tmpplotfile_verticals > $plotsdir/${plot}_verticals.pdf"
+		eval $plotcmd
+	fi
 
 	let idx0=idx0+1
 

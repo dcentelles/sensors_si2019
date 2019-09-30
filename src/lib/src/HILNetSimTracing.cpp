@@ -478,7 +478,7 @@ void HILNetSimTracing::DoRun() {
     while (1) {
       try {
         std::unique_lock<std::mutex> wMhil_lock(wMhil_mutex);
-        listener.lookupTransform("local_origin_ned", "hil", ros::Time(0),
+        listener.lookupTransform("local_origin_ned", hiltfname, ros::Time(0),
                                  wMhil);
         wMhil_updated = true;
         wMhil_lock.unlock();
@@ -945,7 +945,7 @@ void HILNetSimTracing::DoRun() {
 }
 
 CLASS_LOADER_REGISTER_CLASS(HILNetSimTracing, NetSimTracing)
-CLASS_LOADER_REGISTER_CLASS(RF_HILNetSimTracing, NetSimTracing)
-CLASS_LOADER_REGISTER_CLASS(RF_UMCIMAC_HILNetSimTracing, NetSimTracing)
 CLASS_LOADER_REGISTER_CLASS(UMCIMAC_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UWSimTF_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UWSimTF_UMCIMAC_HILNetSimTracing, NetSimTracing)
 } // namespace sensors_si2019
