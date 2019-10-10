@@ -7,3 +7,6 @@
 [submodule "modules/umci"]
 	path = modules/umci
 	url = https://github.com/dcentelles/umci.git
+[submodule "modules/ardupilot"]
+	path = modules/ardupilot
+	url = https://github.com/dcentelles/ardupilot.git
