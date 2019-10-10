@@ -12,7 +12,6 @@ pid=$$
 rbasedir=$1
 protos=$2
 bslots=$3
-sitldir=$4
 
 if [ ! -d $rbasedir ]
 then
@@ -35,12 +34,11 @@ do
 	mkdir -p $protodir
 	echo "Current protocol: $protodir"
 	sleep 1s
-	cd $sitldir
 	echo "Launch SITL simulator..."
-	coproc sitl { ../Tools/autotest/sim_vehicle.py -m "--out=udp:127.0.0.1:14550" -L irslab --console; }
+	cp ../config/mav.parm ../modules/ardupilot/Tools/autotest/default_params/sub.parm;
+	coproc sitl { ../modules/ardupilot/Tools/autotest/sim_vehicle.py -m "--out=udp:127.0.0.1:14550" -L irslab --console -v ArduSub; }
 	sitlpid=${sitl_PID}
 	echo $sitlpid
-	cd -
 	sleep 1s
 	echo "Launch aruco_mapping..."
 	{ coproc aruco_mapping { roslaunch aruco_mapping aruco_mapping.launch  num_of_markers:=40 image_transport:=compressed camera_info:=/bluerov2/camera_info image_topic:=/bluerov2/camera marker_size:=0.088; } >&3; } 3>&1
