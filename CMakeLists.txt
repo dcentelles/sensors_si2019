@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf_conversions
   uwsim
-  wireless_ardusub
+  mavlink_ros
 )
 
 SET(MODULES_DIR "modules" )
@@ -102,7 +102,6 @@ SET(${PROJECT_NAME}_INCLUDE_DIRS
     ${catkin_INCLUDE_DIRS}
     ${SRCPATH}lib/include
     ${${UMCI_GIT}_INCLUDE_DIRS}
-    ${${MAVLINK_CPP_GIT}_INCLUDE_DIRS}
     )
 
 
@@ -121,7 +120,7 @@ SET(${PROJECT_NAME}_netsim_scripts_CPP_FILES
 
 #add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_CPP_FILES})
 add_library(${PROJECT_NAME}_netsim_scripts SHARED ${${PROJECT_NAME}_netsim_scripts_CPP_FILES})
-target_link_libraries(${PROJECT_NAME}_netsim_scripts ${catkin_LIBRARIES} ${MAVLINK_CPP_GIT})
+target_link_libraries(${PROJECT_NAME}_netsim_scripts ${catkin_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}_netsim_scripts
         LIBRARY DESTINATION "lib"
@@ -135,7 +134,6 @@ catkin_package(
    LIBRARIES
     ${PROJECT_NAME}_netsim_scripts
     ${${UMCI_GIT}_LIBRARIES}
-    ${${MAVLINK_CPP_GIT}_LIBRARIES}
    INCLUDE_DIRS
     ${${PROJECT_NAME}_INCLUDE_DIRS}
    CATKIN_DEPENDS
@@ -149,7 +147,7 @@ catkin_package(
     sensor_msgs
     sensor_msgs
     tf_conversions
-    wireless_ardusub
+    mavlink_ros
     uwsim
 )
 

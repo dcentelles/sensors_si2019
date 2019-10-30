@@ -6,8 +6,7 @@
 #include <umci/DcMac.h>
 #include <underwater_sensor_msgs/LedLight.h>
 #include <uwsim/NetSim.h>
-#include <wireless_ardusub/JoyController.h>
-#include <wireless_ardusub/OperatorController.h>
+#include <mavlink_ros/OperatorController.h>
 
 namespace sensors_si2019 {
 
@@ -15,7 +14,7 @@ using namespace uwsim;
 using namespace dccomms_packets;
 using namespace dccomms;
 using namespace umci;
-using namespace wireless_ardusub;
+using namespace mavlink_ros;
 
 class HILNetSimTracing : public NetSimTracing {
 public:
