@@ -61,7 +61,7 @@ do
 	kill -9 $(ps aux | grep "ardusub" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 	echo "kill vision filter"
 	kill -9 $vision_filterpid
-	kill -9 $(ps aux | grep "tfToEkf" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
+	kill -9 $(ps aux | grep "tf_filter" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
 	echo "kill aruco_mapping"
 	kill -9 $aruco_mappingpid
 	kill -9 $(ps aux | grep "aruco_mapping" | awk -v mpid=$pid '{ if(mpid != $2) print $2}') > /dev/null 2>&1
