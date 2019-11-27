@@ -9,9 +9,17 @@ protocol=$1
 basedir=$(realpath ${2}/)
 maxBackoffSlots=${3}
 debug=$4
-
+hil=$5
+aruco=$6
 devDelay=2
 maxRange=100
+
+if [ "$hil" == "hil" ]
+then
+	fdm=""
+else
+	fdm="\<fdm\>5503\<\/fdm\>"
+fi
 
 echo "protocol: $protocol"
 
@@ -60,11 +68,25 @@ scenesdir=$(rospack find sensors_si2019)/scenes
 uwsimlog=$(realpath $basedir/uwsimnet.log)
 uwsimlograw=$(realpath $basedir/uwsim.log.raw)
 
+
+if [ "$aruco" == "aruco" ]
+then
+	tracing_prefix=""
+else
+	tracing_prefix="UWSimTF_"
+fi
 tmplscene=$scenesdir/hil.xml
 echo "TMPL SCENE: $tmplscene"
 if [ "$protocol" == "dcmac" ]
 then
-	tracingscript=UMCIMAC_HILNetSimTracing
+	if [ "$hil" == "hil" ]
+	then
+		tracingscript=UMCIMAC_HILNetSimTracing
+	else
+		tracingscript=UMCIMAC_SITLNetSimTracing
+	fi
+	tracingscript=${tracing_prefix}${tracingscript}
+
 	scene=$scenesdir/$protocol.xml
 	cp $tmplscene $scene
 	cd ../modules/umci
@@ -77,7 +99,14 @@ then
 	pktbuilder="DcMacPacketBuilder"
 	libpath="<libPath>$library<\/libPath>"
 else
-	tracingscript=HILNetSimTracing
+	if [ "$hil" == "hil" ]
+	then
+		tracingscript=HILNetSimTracing
+	else
+		tracingscript=SITLNetSimTracing
+	fi
+	tracingscript=${tracing_prefix}${tracingscript}
+
 	scene=$scenesdir/$protocol.xml
 	pktbuilder="VariableLength2BPacketBuilder"
 	sed "s/<name><\/name>/<name>$protocol<\/name>/g" $tmplscene > $scene
@@ -92,6 +121,8 @@ hil_rf_addr=0
 explorer1_addr=2
 explorer2_addr=3
 explorer3_addr=4
+
+sed -i "s/FDM/$fdm/g" $scene
 
 sed -i "s/buoy_addr/$buoy_addr/g" $scene
 sed -i "s/hil_ac_addr/$hil_ac_addr/g" $scene

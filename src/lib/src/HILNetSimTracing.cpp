@@ -36,8 +36,7 @@ HILNetSimTracing::HILNetSimTracing() : NetSimTracing() {
   pb = dccomms::CreateObject<VariableLength2BPacketBuilder>();
   use_rf_channels = false;
   use_umci_mac = false;
-  params.sitl = true;
-  op = dccomms::CreateObject<OperatorController>(params);
+  params.sitl = false;
 }
 
 void HILNetSimTracing::PacketTransmitting(std::string path,
@@ -129,6 +128,7 @@ void HILNetSimTracing::ShowPosition(string path, ROSCommsDevicePtr dev,
 }
 
 void HILNetSimTracing::Configure() {
+  op = dccomms::CreateObject<OperatorController>(params);
   SetLogName("uwsim_netsim_scripts");
 
   // The logging is managed by a spdlog (https://github.com/gabime/spdlog)
@@ -946,6 +946,10 @@ void HILNetSimTracing::DoRun() {
 
 CLASS_LOADER_REGISTER_CLASS(HILNetSimTracing, NetSimTracing)
 CLASS_LOADER_REGISTER_CLASS(UMCIMAC_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(SITLNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UMCIMAC_SITLNetSimTracing, NetSimTracing)
 CLASS_LOADER_REGISTER_CLASS(UWSimTF_HILNetSimTracing, NetSimTracing)
 CLASS_LOADER_REGISTER_CLASS(UWSimTF_UMCIMAC_HILNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UWSimTF_SITLNetSimTracing, NetSimTracing)
+CLASS_LOADER_REGISTER_CLASS(UWSimTF_UMCIMAC_SITLNetSimTracing, NetSimTracing)
 } // namespace sensors_si2019

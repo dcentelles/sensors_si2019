@@ -94,7 +94,68 @@
   </CustomCommsChannel>
 
   <vehicle>
-    <name>bluerov2_ghost</name>
+    <name>explorer1_target</name>
+    <file>data/scenes/bluerov2_white_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -55 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <vehicle>
+    <name>explorer2_target</name>
+    <file>data/scenes/bluerov2_white_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -55 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <vehicle>
+    <name>explorer3_target</name>
+    <file>data/scenes/bluerov2_white_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -55 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <!--
+  <vehicle>
+    <name>bluerov2_target_comms</name>
+    <file>data/scenes/bluerov2_green_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -55 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+  -->
+  <vehicle>
+    <name>bluerov2_target</name>
     <file>data/scenes/bluerov2_ghost.urdf</file>
     <position>
       <x> 0 </x>
@@ -177,8 +238,8 @@
   <!-- leader 0 (hil) -->
   <vehicle>
     <name>hil</name>
-    <file>data/scenes/bluerov2_ghost.urdf</file>
-    <fdm>5503</fdm>
+    <file>data/scenes/bluerov2.urdf</file>
+    FDM
     <position>
       <x> 0 </x>
       <y> 0 </y>
@@ -311,7 +372,7 @@
    <!-- explorer 1 -->
   <vehicle>
     <name>explorer1</name>
-    <file>data/scenes/bluerov2.urdf</file>
+    <file>data/scenes/bluerov2_white.urdf</file>
     <position>
       <x> 0 </x>
       <y> -1.5 </y>
@@ -375,7 +436,7 @@
   <!-- explorer 2 -->
   <vehicle>
     <name>explorer2</name>
-    <file>data/scenes/bluerov2.urdf</file>
+    <file>data/scenes/bluerov2_white.urdf</file>
     <position>
       <x> -1.5 </x>
       <y> -1.5 </y>
@@ -439,7 +500,7 @@
    <!-- explorer 3 -->
   <vehicle>
     <name>explorer3</name>
-    <file>data/scenes/bluerov2.urdf</file>
+    <file>data/scenes/bluerov2_white.urdf</file>
     <position>
       <x> -1.5 </x>
       <y> 0 </y>
@@ -909,12 +970,12 @@
 
 
   <rosInterfaces>
-	
+	  <!--	
    <ROSOdomToPAT>
       <topic> /bluerov2_ghost/odom </topic>
       <vehicleName> bluerov2_ghost </vehicleName>
     </ROSOdomToPAT>
-
+ -->
    <WorldToROSTF>
       <rootName> world </rootName>
       <enableObjects> 1 </enableObjects>
@@ -961,6 +1022,38 @@
       <topic> /uwsim/explorer3_2/velocity </topic>
       <vehicleName> explorer3_2 </vehicleName>
     </ROSTwistToPAT>  
+
+    <ROSPoseToPAT>
+      <topic> /bluerov2_target/pose </topic>
+      <vehicleName> bluerov2_target </vehicleName>
+    </ROSPoseToPAT>
+
+    <!--
+    <ROSPoseToPAT>
+      <topic> /bluerov2_target_comms/pose </topic>
+      <vehicleName> bluerov2_target_comms </vehicleName>
+    </ROSPoseToPAT>
+    -->
+
+    <ROSPoseToPAT>
+      <topic> /bluerov2/pose </topic>
+      <vehicleName> hil </vehicleName>
+    </ROSPoseToPAT>
+
+    <ROSPoseToPAT>
+      <topic> /explorer1_target/pose </topic>
+      <vehicleName> explorer1_target </vehicleName>
+    </ROSPoseToPAT>
+
+    <ROSPoseToPAT>
+      <topic> /explorer2_target/pose </topic>
+      <vehicleName> explorer2_target </vehicleName>
+    </ROSPoseToPAT>
+
+    <ROSPoseToPAT>
+      <topic> /explorer3_target/pose </topic>
+      <vehicleName> explorer3_target </vehicleName>
+    </ROSPoseToPAT>
 
     <CustomCommsDeviceROS>
       <name>comms_hil_ac</name>

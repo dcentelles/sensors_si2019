@@ -1,4 +1,5 @@
 #include <dccomms_packets/VariableLength2BPacket.h>
+#include <mavlink_ros/OperatorController.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/publisher.h>
 #include <ros/subscriber.h>
@@ -6,7 +7,6 @@
 #include <umci/DcMac.h>
 #include <underwater_sensor_msgs/LedLight.h>
 #include <uwsim/NetSim.h>
-#include <mavlink_ros/OperatorController.h>
 
 namespace sensors_si2019 {
 
@@ -119,22 +119,45 @@ protected:
   std::string hiltfname = "erov"; // aruco_mapping filtered
 };
 
+class UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
+public:
+  UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = true;
+    params.sitl = false;
+    HILNetSimTracing::Configure();
+  }
+};
+
+class SITLNetSimTracing : public HILNetSimTracing {
+public:
+  SITLNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = false;
+    params.sitl = true;
+    HILNetSimTracing::Configure();
+  }
+};
+
+class UMCIMAC_SITLNetSimTracing : public HILNetSimTracing {
+public:
+  UMCIMAC_SITLNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = true;
+    params.sitl = true;
+    HILNetSimTracing::Configure();
+  }
+};
+
 // The following class can only be used when using the ArduSub SITL simulator
 // and its FDM output
 class UWSimTF_HILNetSimTracing : public HILNetSimTracing {
 public:
   UWSimTF_HILNetSimTracing() : HILNetSimTracing() {}
   void Configure() {
-    hiltfname = "rov"; // UWSim TF
-    HILNetSimTracing::Configure();
-  }
-};
-
-class UMCIMAC_HILNetSimTracing : public HILNetSimTracing {
-public:
-  UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
-  void Configure() {
-    use_umci_mac = true;
+    use_umci_mac = false;
+    params.sitl = false;
+    hiltfname = "hil"; // UWSim TF
     HILNetSimTracing::Configure();
   }
 };
@@ -144,7 +167,30 @@ public:
   UWSimTF_UMCIMAC_HILNetSimTracing() : HILNetSimTracing() {}
   void Configure() {
     use_umci_mac = true;
-    hiltfname = "rov"; // UWSim TF
+    params.sitl = false;
+    hiltfname = "hil"; // UWSim TF
+    HILNetSimTracing::Configure();
+  }
+};
+
+class UWSimTF_SITLNetSimTracing : public HILNetSimTracing {
+public:
+  UWSimTF_SITLNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = false;
+    params.sitl = true;
+    hiltfname = "hil"; // UWSim TF
+    HILNetSimTracing::Configure();
+  }
+};
+
+class UWSimTF_UMCIMAC_SITLNetSimTracing : public HILNetSimTracing {
+public:
+  UWSimTF_UMCIMAC_SITLNetSimTracing() : HILNetSimTracing() {}
+  void Configure() {
+    use_umci_mac = true;
+    params.sitl = true;
+    hiltfname = "hil"; // UWSim TF
     HILNetSimTracing::Configure();
   }
 };
