@@ -243,8 +243,8 @@ void HILNetSimTracing::explorerTxWork(int src, int dst,
   int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
           *pitch = roll + 1, *yaw = pitch + 1;
   double tmp_roll, tmp_pitch, tmp_yaw;
-  pkt->SetSrcAddr(src);
-  pkt->SetDestAddr(dst);
+  pkt->SetSrc(src);
+  pkt->SetDst(dst);
 
   uint32_t seq = 0;
   uint32_t pdSize = explorersPacketSize;
@@ -270,7 +270,7 @@ void HILNetSimTracing::explorerTxWork(int src, int dst,
     pkt->PayloadUpdated(pdSize);
     stream << pkt;
     Info("E{}: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", src,
-         pkt->GetDestAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+         pkt->GetDst(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
          *roll, *pitch, *yaw);
 
     nanos = static_cast<uint64_t>(
@@ -294,7 +294,7 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
   tf::Quaternion rot;
   while (true) {
     stream >> pkt;
-    if (pkt->PacketIsOk()) {
+    if (pkt->IsOk()) {
       // we have received the position of the leader
       pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
       droll = GetContinuousRot(*roll);
@@ -302,7 +302,7 @@ void HILNetSimTracing::explorerRxWork(int src, CommsDeviceServicePtr &stream,
       dyaw = GetContinuousRot(*yaw);
       rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
       Info("E{}: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}", src,
-           pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+           pkt->GetSrc(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
            *roll, *pitch, *yaw);
 
       //      mutex.lock();
@@ -732,7 +732,7 @@ void HILNetSimTracing::DoRun() {
     tf::TransformBroadcaster tf_broadcaster;
     while (true) {
       buoy >> pkt;
-      if (pkt->PacketIsOk()) {
+      if (pkt->IsOk()) {
         // we have received the position of the leader
         pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
         droll = GetContinuousRot(*roll);
@@ -740,10 +740,10 @@ void HILNetSimTracing::DoRun() {
         dyaw = GetContinuousRot(*yaw);
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
         Info("BUOY: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}",
-             pkt->GetSrcAddr(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
+             pkt->GetSrc(), pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z,
              *roll, *pitch, *yaw);
 
-        if (pkt->GetSrcAddr() == hil_ac_addr) {
+        if (pkt->GetSrc() == hil_ac_addr) {
           wMhil_comms_mutex.lock();
           wMhil_comms.setOrigin(pos);
           wMhil_comms.setRotation(rot);
@@ -771,7 +771,7 @@ void HILNetSimTracing::DoRun() {
     hilTargets.push_back(std::vector<double>{-0.23, 0.04, 0.44, 357});
 
     auto pkt = pb->Create();
-    pkt->SetSrcAddr(buoy_addr);
+    pkt->SetSrc(buoy_addr);
     auto pd = pkt->GetPayloadBuffer();
     int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
             *pitch = roll + 1, *yaw = pitch + 1;
@@ -816,7 +816,7 @@ void HILNetSimTracing::DoRun() {
       wMthil_mutex.unlock();
 
       // Update leader0 position
-      pkt->SetDestAddr(hil_ac_addr);
+      pkt->SetDst(hil_ac_addr);
       pkt->SetSeq(l0seq++);
       *x = static_cast<int16_t>(std::round(nextTarget[0] * 100));
       *y = static_cast<int16_t>(std::round(nextTarget[1] * 100));
@@ -826,7 +826,7 @@ void HILNetSimTracing::DoRun() {
       *pitch = 0;
       pkt->PayloadUpdated(pdSize);
       buoy << pkt;
-      Info("BUOY: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
+      Info("BUOY: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDst(),
            pkt->GetSeq(), pkt->GetPacketSize(), *y, *y, *z, *roll, *pitch,
            *yaw);
 
@@ -872,7 +872,7 @@ void HILNetSimTracing::DoRun() {
     int16_t *x = (int16_t *)(pd + 1), *y = x + 1, *z = y + 1, *roll = z + 1,
             *pitch = roll + 1, *yaw = pitch + 1;
     double tmp_roll, tmp_pitch, tmp_yaw;
-    pkt->SetSrcAddr(hil_ac_addr);
+    pkt->SetSrc(hil_ac_addr);
 
     uint32_t seq = 0;
     uint32_t pdSize = hilPacketSize;
@@ -898,11 +898,11 @@ void HILNetSimTracing::DoRun() {
       *yaw = static_cast<int16_t>(GetDiscreteRot(tmp_yaw));
 
       pkt->SetSeq(seq++);
-      pkt->SetDestAddr(buoy_addr);
+      pkt->SetDst(buoy_addr);
       pkt->PayloadUpdated(pdSize);
 
       hil_large << pkt;
-      Info("HIL: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDestAddr(),
+      Info("HIL: TX TO {} SEQ {} S {} P {} {} {} {} {} {}", pkt->GetDst(),
            pkt->GetSeq(), pkt->GetPacketSize(), *x, *y, *z, *roll, *pitch,
            *yaw);
 
@@ -921,7 +921,7 @@ void HILNetSimTracing::DoRun() {
     tf::Quaternion rot;
     while (true) {
       hil_large >> pkt;
-      if (pkt->PacketIsOk()) {
+      if (pkt->IsOk()) {
         // we have received the desired position from the buoy
         pos = tf::Vector3(*x / 100., *y / 100., *z / 100.);
         droll = GetContinuousRot(*roll);
@@ -930,7 +930,7 @@ void HILNetSimTracing::DoRun() {
         rot = tf::createQuaternionFromRPY(droll, dpitch, dyaw).normalize();
         uint32_t seq = pkt->GetSeq();
         Info("HIL: RX FROM {} SEQ {} S {} P {} {} {} {} {} {}",
-             pkt->GetSrcAddr(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
+             pkt->GetSrc(), seq, pkt->GetPacketSize(), *x, *y, *z, *roll,
              *pitch, *yaw);
         wMthil_comms_mutex.lock();
         wMthil_comms.setOrigin(pos);
