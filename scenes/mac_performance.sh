@@ -92,7 +92,7 @@ then
 	cd ../modules/umci
 	gitrev=$(git rev-parse --short HEAD)
 	cd -
-	library=$(rospack find sensors_si2019)/../../devel/lib/libumci_${gitrev}.so
+	library=$(rospack find sensors_si2019)/../../../devel/lib/libumci_${gitrev}.so
 #	library=$(realpath ${library})
 	library=$(echo "$library" | sed 's/\//\\\//g')
 	echo $library
