@@ -44,6 +44,13 @@ do
 		aruco_mappingpid=${aruco_mapping_PID}
 		echo $aruco_mappingpid
 
+		sleep 1s
+
+		echo "Launch vision filter..."
+		{ coproc vision_filter { rosrun filters_ros tf_filter; } >&3; } 3>&1
+		vision_filterpid=${vision_filter_PID}
+		echo $vision_filterpid
+
 	else
 		echo "Launch SITL simulator..."
 		cp ../config/mav.parm ../modules/ardupilot/Tools/autotest/default_params/sub.parm;
