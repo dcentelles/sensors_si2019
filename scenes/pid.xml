@@ -1,0 +1,696 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE UWSimScene SYSTEM "UWSimScene.dtd" >
+
+<UWSimScene>
+  <oceanState>
+    <windx> 0.04 </windx>
+    <windy> 0.04 </windy>
+    <windSpeed> 12 </windSpeed>
+    <depth> 1000 </depth>
+    <reflectionDamping> 0.35 </reflectionDamping>
+    <waveScale> 1e-7 </waveScale>
+    <isNotChoppy> 0 </isNotChoppy>
+    <choppyFactor> 2.5 </choppyFactor>
+    <crestFoamHeight> 2.2 </crestFoamHeight>
+    <oceanSurfaceHeight> 0 </oceanSurfaceHeight>
+    <fog>
+      <density> 0.1 </density>
+      <color>
+	<r>0</r>
+	<g>0.05</g>
+	<b>0.3</b>
+      </color>
+    </fog>
+    <color>
+      <r>0.0</r>
+      <g>0.05</g>
+      <b>0.3</b>
+    </color>
+    <attenuation>
+      <r>0.015</r>
+      <g>0.0075 </g>
+      <b> 0.005 </b>
+    </attenuation>
+  </oceanState>
+  <simParams>
+    <disableShaders> 0 </disableShaders>
+    <resw> 640 </resw>
+    <resh> 480 </resh>
+  </simParams>
+  <camera>
+    <freeMotion> 1 </freeMotion>
+    <fov> 60 </fov>
+    <aspectRatio> 1.33 </aspectRatio>
+    <near> 0.1 </near>
+    <far> 10000 </far>
+    <position>
+      <x>-1.008775</x>
+      <y>-0.432777 </y>
+      <z>-3.236887 </z>
+    </position> 
+    <lookAt>
+      <x>-0.417715</x>
+      <y>-0.308857 </y>
+      <z>-4.033940 </z>
+    </lookAt>
+
+  </camera>
+
+  <nedOrigin>
+   <lat>39.993117</lat>
+   <lon>-0.068812</lon>
+  </nedOrigin>
+
+  <vehicle>
+    <name>buoy</name>
+    <file>data/scenes/empty.urdf</file>
+    <position>
+      <x> 0.6 </x>
+      <y> 0.6 </y>
+      <z> -4.3 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <vehicle>
+    <name>bluerov2_ghost</name>
+    <file>data/scenes/bluerov2_ghost.urdf</file>
+    <position>
+      <x> 0 </x>
+      <y> 1.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+  </vehicle>
+
+  <vehicle>
+    <name>hil</name>
+    <file>data/scenes/bluerov2.urdf</file>
+    <position>
+      <x> -1 </x>
+      <y> -0.5 </y>
+      <z> -5 </z>
+    </position>
+    <orientation>
+      <r>-3.1415</r>
+      <p>0</p>
+      <y>0</y>
+    </orientation>
+    <virtualCamera>
+      <name>bluerov2_camera</name>
+      <relativeTo>base_link</relativeTo>
+      <resw> 1280 </resw>
+      <resh> 720 </resh>
+      <position>
+        <x>0.28</x>
+        <y> 0.0 </y>
+        <z> 0.03 </z>
+      </position>
+      <orientation>
+        <r>-1.57</r>
+        <p>0</p>
+        <y>1.57 </y>
+      </orientation>
+    </virtualCamera>
+    <LedArray>
+      <name>bluerov2_leds</name>
+      <relativeTo>base_link</relativeTo>
+      <position>
+        <x>0.2</x>
+        <y>0</y>
+        <z>-0.05</z>
+      </position>
+      <orientation>
+        <r>0</r>
+        <p>0</p>
+        <y>0</y>
+      </orientation>
+      <radio>0.02</radio>
+      <space>0.30</space>
+    </LedArray>
+  </vehicle>
+
+  <object>
+    <name> terrain </name>
+    <file> objects/cuba.3ds  </file>
+    <position>
+      <x> 0</x>
+      <y> 0 </y>
+      <z> -5.6 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>0 </p>
+      <y>0 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> floor </name>
+    <file> objects/tankFloor.osg  </file>
+    <position>
+      <x> 0.05</x>
+      <y> 0.36 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>0 </p>
+      <y>0 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.6 </y>
+      <z> 0.6</z>
+    </scaleFactor>
+  </object>
+
+  <object>
+    <name> amphora </name>
+    <file> objects/full_amphora.osg  </file>
+    <position>
+      <x> 0.00</x>
+      <y> 0.00 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>-0.1</r>
+      <p>1.57 </p>
+      <y>0 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.5 </y>
+      <z> 0.5 </z>
+    </scaleFactor>
+  </object>
+
+  <object>
+    <name> amphora2 </name>
+    <file> objects/amphora2.osg  </file>
+    <position>
+      <x> 0.00</x>
+      <y> 0.1 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>0.7</r>
+      <p>1.0 </p>
+      <y>0 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.5 </y>
+      <z> 0.5 </z>
+    </scaleFactor>
+  </object>
+
+  <object>
+    <name> amphora2-2 </name>
+    <file> objects/amphora2.osg  </file>
+    <position>
+      <x> 0.20</x>
+      <y> 0.1 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>0.0</r>
+      <p>-1.57 </p>
+      <y>0.3 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.5 </y>
+      <z> 0.5 </z>
+    </scaleFactor>
+  </object>
+
+  <object>
+    <name> amphora-2 </name>
+    <file> objects/full_amphora.osg  </file>
+    <position>
+      <x> 0.00</x>
+      <y> 0.30 </y>
+      <z> -5.5 </z>
+    </position>
+    <orientation>
+      <r>0</r>
+      <p>1.57 </p>
+      <y>0.8 </y>
+    </orientation>
+    <scaleFactor>
+      <x> 0.5 </x>
+      <y> 0.5 </y>
+      <z> 0.5 </z>
+    </scaleFactor>
+
+  </object>
+  <object>
+    <name> aruco_marker_1 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00001.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_6 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00006.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_11 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00011.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_16 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00016.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_21 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00021.osg</file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.50 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!--- col 2 -->
+
+
+  <object>
+    <name> aruco_marker_2 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00002.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_7 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00007.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_12 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00012.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_17 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00017.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_22 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00022.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> 0.20 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!-- col 3 -->
+
+
+  <object>
+    <name> aruco_marker_3 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00003.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_8 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00008.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_13 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00013.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_18 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00018.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+  <object>
+    <name> aruco_marker_23 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00023.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.10 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+<!-- col 4 -->
+
+  <object>
+    <name> aruco_marker_4 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00004.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_9 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00009.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_14 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00014.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_19 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00019.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_24 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00024.osg </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.40 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+
+<!-- col 5 -->
+
+  <object>
+    <name> aruco_marker_5 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00005.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.515 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_10 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00010.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.7025 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_15 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00015.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -4.89 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_20 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00020.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -5.0775 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+  <object>
+    <name> aruco_marker_25 </name>
+    <file> objects/markers/aruco/cube_1x1x1m/aruco_mip_36h12_00025.osg  </file>
+    <position>
+      <x> 1.03</x>
+      <y> -0.70 </y>
+      <z> -5.265 </z>
+    </position>
+    <orientation>
+      <r>1.57</r>
+      <p>0 </p>
+      <y>-1.57 </y>
+    </orientation>
+  </object>
+
+
+  <rosInterfaces>
+
+    <ROSOdomToPAT>
+      <topic> /bluerov2_ghost/odom </topic>
+      <vehicleName> bluerov2_ghost </vehicleName>
+    </ROSOdomToPAT>
+
+
+   <WorldToROSTF>
+      <rootName> world </rootName>
+      <enableObjects> 1 </enableObjects>
+      <rate>10</rate>
+    </WorldToROSTF>
+
+    <VirtualCameraToROSImage>
+	<cameraName>bluerov2_camera</cameraName>
+	<imageTopic> /bluerov2/camera </imageTopic>
+	<infoTopic> /bluerov2/camera_info </infoTopic>
+    </VirtualCameraToROSImage>
+
+    <ROSPoseToPAT>
+      <topic> /bluerov2_ghost/pose </topic>
+      <vehicleName> bluerov2_ghost </vehicleName>
+    </ROSPoseToPAT>
+
+    <ROSPoseToPAT>
+      <topic> /bluerov2/pose </topic>
+      <vehicleName> hil </vehicleName>
+    </ROSPoseToPAT>
+ 
+    <CustomCommsDeviceROS>
+      <name>bluerov2_s100</name>
+      <topic>bluerov2/s100</topic>
+      <rate>10</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>target_s100</name>
+      <topic>target/s100</topic>
+      <rate>10</rate>
+    </CustomCommsDeviceROS>
+
+    <CustomCommsDeviceROS>
+      <name>buoy_s100</name>
+      <topic>buoy/s100</topic>
+      <rate>10</rate>
+    </CustomCommsDeviceROS>
+
+
+  </rosInterfaces>
+
+</UWSimScene>
+
