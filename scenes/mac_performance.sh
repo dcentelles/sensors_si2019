@@ -17,8 +17,10 @@ maxRange=100
 if [ "$hil" == "hil" ]
 then
 	fdm=""
+	mavros_running=true
 else
 	fdm="\<fdm\>5503\<\/fdm\>"
+	mavros_running=false
 fi
 
 echo "protocol: $protocol"
@@ -145,10 +147,10 @@ sed -i "s/<logToFile><\/logToFile>/<logToFile>$uwsimlogpath<\/logToFile>/g" $sce
 
 if [ "$protocol" == "dcmac" ]
 then
-	roslaunch sensors_si2019 hil.launch debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
+	roslaunch sensors_si2019 hil.launch mavros_running:=$mavros_running debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
 else
 #	export NS_LOG="AquaSimMac=all|prefix_time:AquaSimSFama=all|prefix_time:AquaSimAloha=all|prefix_time"
-       	roslaunch sensors_si2019 hil.launch debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
+       	roslaunch sensors_si2019 hil.launch mavros_running:=$mavros_running debug:=$debug scene:=$scene 2>&1 | tee $uwsimlograw & 
 fi
 
 

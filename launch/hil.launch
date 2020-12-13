@@ -36,6 +36,10 @@
 	<param name="target_topic" value="/bluerov2_target_comms/pose" type="string"/>
   </node>
 -->
+  <node if="$(arg mavros_running)" pkg="wireless_ardusub" type="tfToPosePublisher" name="hil_pose_publisher" required="false" output="screen"> 
+        <param name="target_tf" value="erov" type="string"/>
+	<param name="target_topic" value="/bluerov2/pose" type="string"/>
+  </node>
 
   <node pkg="wireless_ardusub" type="tfToPosePublisher" name="hil_te1_publisher" required="false" output="screen"> 
         <param name="target_tf" value="te1" type="string"/>
